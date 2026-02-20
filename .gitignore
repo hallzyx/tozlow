@@ -74,6 +74,7 @@ docker-compose.override.yml
 
 # Keep examples and important lockfiles
 !.env.example
+!.env.deploy.example
 apps/contracts-stylus/.env.deploy.example
 pnpm-lock.yaml
 Cargo.lock
