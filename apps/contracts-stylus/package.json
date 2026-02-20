@@ -1,0 +1,11 @@
+{
+  "name": "contracts-stylus",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "check": "cargo stylus check --endpoint https://sepolia-rollup.arbitrum.io/rpc",
+    "deploy:testnet": "cargo stylus deploy --endpoint $ARBITRUM_SEPOLIA_RPC_URL --private-key $PRIVATE_KEY",
+    "export-abi": "cargo run --features export-abi",
+    "test": "cargo test"
+  }
+}
