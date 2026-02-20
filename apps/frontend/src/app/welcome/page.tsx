@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import gsap from "gsap";
-import * as THREE from "three";
 import {
   Rocket,
   ShieldCheck,
@@ -67,6 +66,7 @@ const faqs = [
 ];
 
 export default function WelcomePage() {
+  const pageRef = useRef<HTMLDivElement | null>(null);
   const blobA = useRef<HTMLDivElement | null>(null);
   const blobB = useRef<HTMLDivElement | null>(null);
 
@@ -82,8 +82,56 @@ export default function WelcomePage() {
     };
   }, []);
 
+  useEffect(() => {
+    const root = pageRef.current;
+    if (!root) return;
+
+    const setMouseVars = (x: number, y: number) => {
+      root.style.setProperty("--grid-mx", `${x}px`);
+      root.style.setProperty("--grid-my", `${y}px`);
+    };
+
+    setMouseVars(window.innerWidth * 0.68, window.innerHeight * 0.24);
+
+    const handleMove = (event: MouseEvent) => {
+      setMouseVars(event.clientX, event.clientY);
+    };
+
+    const handleLeave = () => {
+      setMouseVars(window.innerWidth * 0.68, window.innerHeight * 0.24);
+    };
+
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("blur", handleLeave);
+    document.addEventListener("mouseleave", handleLeave);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("blur", handleLeave);
+      document.removeEventListener("mouseleave", handleLeave);
+    };
+  }, []);
+
   return (
-    <div className="relative overflow-hidden animate-fade-in">
+    <div ref={pageRef} className="relative overflow-hidden animate-fade-in">
+      <div
+        className="pointer-events-none fixed inset-0 z-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(var(--color-foreground) 1px, transparent 1px), linear-gradient(90deg, var(--color-foreground) 1px, transparent 1px)",
+          backgroundSize: "36px 36px",
+        }}
+      />
+      <div
+        className="pointer-events-none fixed inset-0 z-0 opacity-[0.12] transition-opacity duration-300"
+        style={{
+          backgroundImage:
+            "linear-gradient(var(--color-primary) 1px, transparent 1px), linear-gradient(90deg, var(--color-primary) 1px, transparent 1px)",
+          backgroundSize: "36px 36px",
+          maskImage: "radial-gradient(220px circle at var(--grid-mx, 68%) var(--grid-my, 24%), black, transparent 72%)",
+          WebkitMaskImage: "radial-gradient(220px circle at var(--grid-mx, 68%) var(--grid-my, 24%), black, transparent 72%)",
+        }}
+      />
       <div
         ref={blobA}
         className="pointer-events-none absolute -top-16 -left-16 h-72 w-72 rounded-full blur-3xl"
@@ -95,8 +143,13 @@ export default function WelcomePage() {
         style={{ background: "var(--color-accent-glow)" }}
       />
 
-      <div className="relative mx-auto max-w-6xl space-y-12">
+      <div className="relative z-10 mx-auto max-w-6xl space-y-12">
       <section className="relative glass rounded-3xl border border-[var(--color-glass-border)] p-8 sm:p-12">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl">
+          <div className="absolute -left-16 top-8 h-px w-64 rotate-12 bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent opacity-70" />
+          <div className="absolute -left-10 top-16 h-px w-52 rotate-12 bg-gradient-to-r from-transparent via-[var(--color-accent)] to-transparent opacity-60 blur-[0.6px]" />
+          <div className="absolute right-[-70px] bottom-20 h-px w-72 -rotate-[24deg] bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent opacity-55" />
+        </div>
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
@@ -104,13 +157,13 @@ export default function WelcomePage() {
             transition={{ duration: 0.5 }}
             className="max-w-2xl"
           >
-            <SectionEyebrow title="Overview" />
+            
             <span className="inline-flex items-center gap-2 rounded-pill border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs text-[var(--color-foreground)] opacity-90 mb-4">
               <Sparkles className="size-3.5 text-[var(--color-primary)]" />
               New social finance experience
             </span>
 
-            <h1 className="font-display text-4xl sm:text-5xl font-bold leading-tight mb-4">
+            <h1 className="font-display text-3xl sm:text-4xl font-bold leading-tight mb-4">
               Show up with your friends.
               <span className="block text-gradient-primary">Or lose your stake.</span>
             </h1>
@@ -142,14 +195,54 @@ export default function WelcomePage() {
             </div>
           </motion.div>
 
-          <motion.div
+        <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.45, delay: 0.1 }}
-            className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/70 p-3"
-          >
-            <HeroOrb />
-          </motion.div>
+            className=""
+        >
+            <style>{`
+            @keyframes spinGradient {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            `}</style>
+
+            <div
+            className="relative rounded-xl overflow-hidden"
+            style={{
+                // outer padding creates the visible "border" area
+                padding: "2px",
+                borderRadius: "0.75rem", // matches rounded-xl
+            }}
+            >
+            {/* rotating gradient layer only (behind the content) */}
+            <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0"
+                style={{
+                borderRadius: "0.75rem",
+                background:
+                    "conic-gradient(from 0deg, var(--color-primary), var(--color-secondary), var(--color-accent), var(--color-primary))",
+                animation: "spinGradient 6s linear infinite",
+                filter: "saturate(1.05)",
+                zIndex: 0,
+                }}
+            />
+
+            <div
+                className="relative overflow-hidden border border-[var(--color-border)]"
+                style={{ borderRadius: "calc(0.75rem - 2px)", background: "var(--color-surface)", zIndex: 10 }}
+            >
+                <img
+                src="https://images.unsplash.com/photo-1556392714-1d7b65410650?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NzIxMzR8MHwxfHNlYXJjaHwzfHxmcmllbmRzJTIwbWVldHVwJTIwZGlzY3Vzc2lvbiUyMGNvZmZlZSUyMHRhYmxlfGVufDB8MHx8fDE3NzE2MTcxMzZ8MA&ixlib=rb-4.1.0&q=80&w=1080"
+                alt="Friends meeting and talking together"
+                className="h-80 w-full object-cover"
+                />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-[var(--color-background)]/70 via-transparent to-[var(--color-primary)]/25" />
+            </div>
+            </div>
+        </motion.div>
         </div>
       </section>
 
@@ -327,95 +420,4 @@ function SectionHeading({ title, subtitle }: { title: string; subtitle: string }
 
 function SectionDivider() {
   return <div className="h-px bg-gradient-to-r from-transparent via-[var(--color-border)] to-transparent" />;
-}
-
-function HeroOrb() {
-  const mountRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!mountRef.current) return;
-
-    const mount = mountRef.current;
-    const width = mount.clientWidth;
-    const height = 320;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 100);
-    camera.position.z = 3;
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(width, height);
-    mount.appendChild(renderer.domElement);
-
-    const styles = getComputedStyle(document.documentElement);
-    const primary = styles.getPropertyValue("--color-primary").trim() || "#D61F69";
-    const accent = styles.getPropertyValue("--color-accent").trim() || "#0284C7";
-
-    const geometry = new THREE.TorusKnotGeometry(0.72, 0.18, 220, 32);
-    const material = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(primary),
-      metalness: 0.35,
-      roughness: 0.25,
-    });
-    const knot = new THREE.Mesh(geometry, material);
-    scene.add(knot);
-
-    const wire = new THREE.Mesh(
-      geometry,
-      new THREE.MeshBasicMaterial({
-        color: new THREE.Color(accent),
-        wireframe: true,
-        transparent: true,
-        opacity: 0.22,
-      })
-    );
-    scene.add(wire);
-
-    const lightA = new THREE.PointLight(new THREE.Color(primary), 2, 10);
-    lightA.position.set(2, 2, 2);
-    scene.add(lightA);
-
-    const lightB = new THREE.PointLight(new THREE.Color(accent), 1.8, 10);
-    lightB.position.set(-2, -1.5, 2);
-    scene.add(lightB);
-
-    const ambient = new THREE.AmbientLight(0xffffff, 0.35);
-    scene.add(ambient);
-
-    const onResize = () => {
-      if (!mountRef.current) return;
-      const w = mountRef.current.clientWidth;
-      const h = 320;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    };
-    window.addEventListener("resize", onResize);
-
-    let raf = 0;
-    const animate = () => {
-      knot.rotation.x += 0.003;
-      knot.rotation.y += 0.006;
-      wire.rotation.x -= 0.0018;
-      wire.rotation.y -= 0.0045;
-
-      renderer.render(scene, camera);
-      raf = window.requestAnimationFrame(animate);
-    };
-    animate();
-
-    return () => {
-      window.cancelAnimationFrame(raf);
-      window.removeEventListener("resize", onResize);
-      geometry.dispose();
-      material.dispose();
-      renderer.dispose();
-      if (renderer.domElement.parentNode === mount) {
-        mount.removeChild(renderer.domElement);
-      }
-    };
-  }, []);
-
-  return <div ref={mountRef} className="h-80 w-full rounded-xl" />;
 }

@@ -22,7 +22,6 @@
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.4.1",
     "tailwind-merge": "^2.5.2",
-    "three": "^0.183.1",
     "viem": "^2.21.0",
     "wagmi": "^2.13.0"
   },
@@ -31,7 +30,6 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/three": "^0.183.1",
     "eslint": "^9",
     "eslint-config-next": "15.2.0",
     "postcss": "^8",

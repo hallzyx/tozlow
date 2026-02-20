@@ -16,7 +16,7 @@ Tozlow utilizes a monolithic repository structure managed by pnpm workspaces, in
 ### 2. Frontend (`apps/frontend`)
 - **Framework**: Next.js 15 (App Router)
 - **Styling**: Tailwind CSS v4 with custom glassmorphism theme variables.
-- **Motion & Visual Layer**: Framer Motion + GSAP + Three.js (`/welcome` route).
+- **Motion & Visual Layer**: Framer Motion + GSAP + curated technology imagery (`/welcome` route).
 - **Web3 Integration**:
   - `wagmi` for React hooks.
   - `viem` for low-level interaction.
@@ -43,10 +43,11 @@ Tozlow utilizes a monolithic repository structure managed by pnpm workspaces, in
 ## Directory Structure
 - `apps/contracts-stylus/src/lib.rs`: Main contract logic.
 - `apps/frontend/src/app`: Next.js pages.
-- `apps/frontend/src/app/welcome/page.tsx`: Demo landing/dashboard with sectioned UX and animated 3D hero.
+- `apps/frontend/src/app/welcome/page.tsx`: Demo landing/dashboard with sectioned UX, animated overlays, and image-based hero.
 - `apps/frontend/src/components`: Reusable UI components.
 - `apps/frontend/src/abi`: Contract ABIs and addresses.
 
 ## UX Notes
 - Session stats in `session/[id]` were refactored to a 2x2 layout for better scanability.
 - Landing content is split into discrete sections (overview, metrics, flow, value props, CTA, FAQ) to improve storytelling and readability in demos.
+- Landing uses a discrete grid background layer to preserve a technical look while keeping contrast and readability.

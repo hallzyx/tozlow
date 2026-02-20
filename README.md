@@ -13,7 +13,7 @@ Tozlow is a **dApp on Arbitrum Stylus** that penalizes friends who flake on agre
 | Frontend | Next.js 15 + React 19 |
 | Chain interaction | viem + wagmi |
 | Styling | Tailwind CSS v4 |
-| Motion/UI | Framer Motion + GSAP + Three.js |
+| Motion/UI | Framer Motion + GSAP + curated hero imagery |
 | Package manager | pnpm |
 
 ## Project Structure
@@ -38,6 +38,11 @@ tozlow/
 
 - `/` — Main dApp (sessions, deposit, vote, finalize).
 - `/welcome` — Landing/dashboard experience for hackathon demos and first-time viewers.
+
+## Visual Notes
+
+- `/welcome` includes a technology-themed hero image with animated overlays.
+- A subtle grid background is used to reinforce the product's technical identity without adding visual noise.
 
 ## Quick Start
 

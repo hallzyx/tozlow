@@ -1,1 +1,1 @@
-declare module "three";
+// Intentionally left blank.

@@ -65,7 +65,8 @@ Compared to alternatives (expense splitting apps or lotteries), Tozlow adds an e
 To support hackathon presentations and first-time users, Tozlow now includes a dedicated onboarding landing experience at `/welcome` with:
 
 - Clear section-based storytelling (problem, flow, value, CTA, FAQ).
-- Animated visual hierarchy to quickly communicate trust and product mechanics.
+- Animated visual hierarchy plus curated technology imagery to quickly communicate trust and product mechanics.
+- Subtle grid background cues for a technical aesthetic without reducing readability.
 - Immediate conversion path to the live dApp at `/`.
 
 Tozlow has the potential to revolutionize how we think about social gatherings, making them fairer and more fun experiences. It's a fresh idea, with a real problem and an innovative solution. Ready for the pitch.
