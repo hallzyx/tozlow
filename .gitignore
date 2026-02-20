@@ -1,0 +1,84 @@
+# .gitignore for Tozlow monorepo (Next.js frontend + Rust contract)
+# Keep repository clean: ignore local envs, build artifacts, caches & IDE files
+
+# Node / pnpm
+node_modules/
+**/node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+
+# Next.js / frontend build
+.next/
+.next/cache/
+out/
+.dist/
+build/
+public/build/
+
+# TypeScript incremental build files
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Environment / secrets (keep examples in repo)
+.env
+.env.*.local
+.env.local
+.env.development
+.env.production.local
+.env.test
+.env.deploy
+.env.*.key
+.env.*.pem
+
+# Rust build artifacts
+**/target/
+**/target/**
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Testing / coverage
+coverage/
+coverage/**
+*.lcov
+
+# Caches / temp
+.cache/
+.tmp/
+parcel-cache/
+.cache-loader/
+
+# Docker
+docker-compose.override.yml
+.env.docker
+
+# Misc sensitive / generated
+*.pem
+*.key
+*.p12
+*.pfx
+*.log
+
+# Keep examples and important lockfiles
+!.env.example
+apps/contracts-stylus/.env.deploy.example
+pnpm-lock.yaml
+Cargo.lock
+
+# Allow local editor config if intentionally committed
+!.vscode/settings.json
+
+# End
