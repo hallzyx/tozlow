@@ -1,66 +1,71 @@
-# Tozlow 🎉
+# Tozlow
 
-> *¿Dijiste que ibas? Entonces vas. Y si no... pierdes la apuesta.*
+> *Did you say you were coming? Then show up.*
 
-Tozlow es una **dApp en Arbitrum Stylus** que penaliza con USDC a quienes faltan a una reunión de amigos acordada en cadena.
+Tozlow is a **dApp on Arbitrum Stylus** that penalizes friends who flake on agreed-upon meetups with USDC.
 
 ## Stack
 
-| Capa | Herramienta |
+| Layer | Tool |
 |------|------------|
 | Smart contracts | Rust + Stylus SDK v0.10 |
-| Red | Arbitrum Sepolia (testnet) |
+| Network | Arbitrum Sepolia (testnet) |
 | Frontend | Next.js 15 + React 19 |
 | Chain interaction | viem + wagmi |
-| Estilos | Tailwind CSS v4 |
+| Styling | Tailwind CSS v4 |
+| Motion/UI | Framer Motion + GSAP + Three.js |
 | Package manager | pnpm |
 
-## Estructura del proyecto
+## Project Structure
 
 ```
 tozlow/
 ├── apps/
-│   ├── contracts-stylus/   # Contratos Rust (Stylus)
+│   ├── contracts-stylus/   # Rust Contracts (Stylus)
 │   └── frontend/           # Next.js app
 ├── pnpm-workspace.yaml
 └── package.json
 ```
 
-## Flujo de usuario
+## User Flow
 
-1. **Crear sesión** — el host define: nombre, monto USDC por participante, fecha/hora de vencimiento y participantes (3-5).
-2. **Unirse y depositar** — cada participante aprueba y deposita el monto en el contrato.
-3. **Votar ausencia** — pasada la fecha, los participantes votan quiénes faltaron.
-4. **Distribuir** — si hay mayoría sobre un ausente, su parte se reparte entre los asistentes.
+1. **Create Session** — The host defines: amount per person (USDC), deadline, and participants (3-5).
+2. **Join & Deposit** — Each participant approves and deposits the amount into the smart contract.
+3. **Vote Absentee** — After the event deadline, participants verify who didn't show up.
+4. **Distribute** — If the majority votes someone as absent, their deposit is slashed and distributed among the attendees.
+
+## Demo Routes
+
+- `/` — Main dApp (sessions, deposit, vote, finalize).
+- `/welcome` — Landing/dashboard experience for hackathon demos and first-time viewers.
 
 ## Quick Start
 
 ```bash
-# 1. Instalar dependencias
+# 1. Install dependencies
 pnpm install
 
-# 2. Copiar variables de entorno
+# 2. Setup environment variables
 cp apps/frontend/.env.example apps/frontend/.env.local
 
-# 3. Desplegar contrato en testnet
+# 3. Deploy contract to testnet
 pnpm contract:deploy:testnet
 
-# 4. Copiar address del contrato en .env.local
+# 4. Set contract address in .env.local
 # NEXT_PUBLIC_TOZLOW_ADDRESS=0x...
 
-# 5. Levantar frontend
+# 5. Start frontend
 pnpm dev
 ```
 
-## Redes
+## Networks
 
-| Red | Chain ID | RPC |
+| Network | Chain ID | RPC |
 |-----|----------|-----|
 | Arbitrum Sepolia | 421614 | https://sepolia-rollup.arbitrum.io/rpc |
 
-## Recursos
+## Resources
 
 - [Arbitrum Stylus Docs](https://docs.arbitrum.io/stylus/quickstart)
 - [Arbitrum Sepolia Explorer](https://sepolia.arbiscan.io)
-- [USDC en Arbitrum Sepolia](https://developers.circle.com/stablecoins/docs/usdc-on-testnet)
-# tozlow
+- [USDC on Arbitrum Sepolia](https://developers.circle.com/stablecoins/docs/usdc-on-testnet)

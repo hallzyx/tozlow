@@ -12,7 +12,7 @@ import { VotePanel } from "@/components/VotePanel";
 import { formatUsdc, formatDeadline, shortAddress, parseContractError, cn } from "@/lib/utils";
 import {
   ArrowLeft, Users, Coins, Calendar, Copy, CheckCircle2,
-  Loader2, Trophy, ExternalLink,
+  Loader2, Trophy, ExternalLink, Crown, Lock,
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -39,7 +39,7 @@ export default function SessionPage() {
     transport: http(rpcUrl),
   });
 
-  // Leer datos de la sesión
+  // Read session data
   const { data: sessionData, isLoading: loadingSession, refetch } = useReadContract({
     address: TOZLOW_ADDRESS,
     abi: tozlowAbi,
@@ -47,7 +47,7 @@ export default function SessionPage() {
     args: [sessionId],
   });
 
-  // Leer participantes iterando getParticipantAt
+  // Read participants iterating getParticipantAt
   useEffect(() => {
     async function fetchParticipants() {
       if (!sessionData) return;
@@ -70,10 +70,10 @@ export default function SessionPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionData]);
 
-  // Finalizar sesión
+  // Finalize session
   const { writeContract: writeFinalize, data: finalHash, isPending: isFinalizePending } = useWriteContract();
   const { isLoading: isFinConfirming, isSuccess: isFinSuccess } = useWaitForTransactionReceipt({ hash: finalHash });
-
+  
   if (isFinSuccess) refetch();
 
   if (!mounted || loadingSession || loadingParts) {
@@ -87,9 +87,9 @@ export default function SessionPage() {
   if (!sessionData) {
     return (
       <div className="text-center py-24 animate-fade-in">
-        <p className="text-[var(--color-muted)]">Sesión no encontrada.</p>
+        <p className="text-[var(--color-muted)]">Session not found.</p>
         <Link href="/" className="text-[var(--color-primary)] text-sm mt-2 inline-block">
-          ← Volver
+          ← Back
         </Link>
       </div>
     );
@@ -98,7 +98,7 @@ export default function SessionPage() {
   const [host, amountPerPerson, deadline, votingPeriod, finalized, active, participantCount] = sessionData as [
     Address, bigint, bigint, bigint, boolean, boolean, bigint
   ];
-  const sessionLabel = `Sesión #${sessionId.toString()}`;
+  const sessionLabel = `Session #${sessionId.toString()}`;
   const votingEnd = deadline + votingPeriod;
 
   const status = getSessionStatus({ active, finalized, deadline, votingDeadline: votingEnd });
@@ -143,24 +143,25 @@ export default function SessionPage() {
         className="inline-flex items-center gap-1.5 text-sm text-[var(--color-muted)] hover:text-[var(--color-foreground)] mb-6 transition-colors"
       >
         <ArrowLeft className="size-4" />
-        Mis sesiones
+        My Sessions
       </Link>
 
       {/* Header card */}
       <div className="glass rounded-2xl border border-[var(--color-glass-border)] overflow-hidden mb-5">
         {/* Gradient bar */}
         <div className="h-1.5 bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-secondary)] to-[var(--color-accent)]" />
-
         <div className="p-6">
           <div className="flex items-start justify-between gap-4 mb-4">
             <div className="flex-1 min-w-0">
               <h1 className="font-display text-2xl font-bold truncate">{sessionLabel}</h1>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-xs text-[var(--color-muted)]">Host:</span>
-                <span className="text-xs font-mono text-[var(--color-muted)]">
+                <span className="text-xs font-mono text-[var(--color-muted)] flex items-center gap-1">
                   {shortAddress(host)}
                   {isHost && (
-                    <span className="ml-1 text-[var(--color-primary)]">(tú 👑)</span>
+                    <span className="inline-flex items-center gap-0.5 ml-1 text-[var(--color-primary)] font-semibold">
+                       <Crown className="size-3" /> (you)
+                    </span>
                   )}
                 </span>
               </div>
@@ -169,28 +170,28 @@ export default function SessionPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div className="grid grid-cols-2 gap-3 mb-4">
             <InfoCard
               icon={<Coins className="size-4 text-[var(--color-usdc)]" />}
-              label="Por persona"
+              label="Per person"
               value={`${formatUsdc(amountPerPerson)} USDC`}
               accent="usdc"
             />
             <InfoCard
               icon={<Users className="size-4 text-[var(--color-secondary)]" />}
-              label="Participantes"
+              label="Participants"
               value={`${allParticipants.length}`}
               accent="secondary"
             />
             <InfoCard
               icon={<Calendar className="size-4 text-[var(--color-primary)]" />}
-              label="Fecha evento"
+              label="Event Date"
               value={formatDeadline(deadline)}
               accent="primary"
             />
             <InfoCard
               icon={<Calendar className="size-4 text-[var(--color-primary)]" />}
-              label="Cierre votación"
+              label="Voting Closes"
               value={formatDeadline(votingEnd)}
               accent="primary"
             />
@@ -198,8 +199,8 @@ export default function SessionPage() {
 
           {/* Session ID */}
           <div className="flex items-center gap-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] px-3 py-2">
-            <span className="text-[11px] text-[var(--color-muted)] shrink-0">ID sesión:</span>
-            <span className="text-[11px] font-mono text-[var(--color-muted)] truncate flex-1">
+            <span className="text-[11px] text-[var(--color-foreground)] opacity-75 shrink-0">Session ID:</span>
+            <span className="text-[11px] font-mono text-[var(--color-foreground)] opacity-75 truncate flex-1">
               #{sessionId.toString()}
             </span>
             <button
@@ -212,11 +213,11 @@ export default function SessionPage() {
         </div>
       </div>
 
-      {/* Participantes */}
+      {/* Participants */}
       <div className="glass rounded-2xl border border-[var(--color-glass-border)] p-6 mb-5">
         <h2 className="font-display font-bold text-base mb-4 flex items-center gap-2">
           <Users className="size-5 text-[var(--color-secondary)]" />
-          Participantes ({allParticipants.length})
+          Participants ({allParticipants.length})
         </h2>
         <div className="space-y-2">
           {allParticipants.map((p, idx) => (
@@ -232,15 +233,15 @@ export default function SessionPage() {
         </div>
       </div>
 
-      {/* Acciones */}
+      {/* Actions */}
       {isParticipant && (
         <div className="space-y-4">
-          {/* Depositar (solo antes del deadline y sin depósito aún) */}
+          {/* Deposit (only before deadline and not deposited yet) */}
           {now < Number(deadline) && !finalized && (
             <div className="glass rounded-2xl border border-[var(--color-glass-border)] p-6">
               <h2 className="font-display font-bold text-base mb-4 flex items-center gap-2">
                 <Coins className="size-5 text-[var(--color-usdc)]" />
-                Tu depósito
+                Your Deposit
               </h2>
               <DepositButton
                 sessionId={sessionId}
@@ -249,7 +250,7 @@ export default function SessionPage() {
             </div>
           )}
 
-          {/* Votar (durante la ventana de votación) */}
+          {/* Vote (during voting window) */}
           {isVotingOpen && !finalized && (
             <div className="glass rounded-2xl border border-[var(--color-glass-border)] p-6">
               <VotePanel
@@ -261,26 +262,27 @@ export default function SessionPage() {
             </div>
           )}
 
-          {/* Info: Votación cerrada, pendiente de finalizar */}
+          {/* Info: Voting closed, pending finalize */}
           {isVotingClosed && !finalized && (
             <div className="glass rounded-2xl border border-[var(--color-warning)]/30 p-6 text-center">
-              <p className="text-sm text-[var(--color-muted)] mb-4">
-                🔒 La ventana de votación cerró. Quien no votó será marcado como ausente automáticamente.
-              </p>
+              <div className="inline-flex items-center gap-2 text-sm text-[var(--color-foreground)] opacity-85 mb-1">
+                <Lock className="size-4 text-[var(--color-warning)]" />
+                <span>Voting window closed. Non-voters will be marked absent automatically.</span>
+              </div>
             </div>
           )}
 
-          {/* Finalizar */}
+          {/* Finalize */}
           {canFinalize && (
             <div className="glass rounded-2xl border border-[var(--color-glass-border)] p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Trophy className="size-5 text-[var(--color-warning)]" />
-                <h2 className="font-display font-bold text-base">Resolver sesión</h2>
+                <h2 className="font-display font-bold text-base">Resolve Session</h2>
               </div>
               <p className="text-sm text-[var(--color-muted)] mb-4">
                 {active 
-                  ? "Finaliza la sesión para distribuir los fondos. Los que no votaron serán marcados ausentes."
-                  : "No todos depositaron. Se reembolsará a quienes sí lo hicieron."
+                  ? "Finalize session to distribute funds. Those who didn't vote will be marked absent."
+                  : "Not everyone deposited. Refunds will be issued to those who did."
                 }
               </p>
               {finalizeError && (
@@ -303,22 +305,24 @@ export default function SessionPage() {
                 {isFinalizePending || isFinConfirming ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    Procesando…
+                    Processing…
                   </>
                 ) : (
-                  "Finalizar y distribuir fondos 🏆"
+                  <>
+                    Finalize and distribute funds <Trophy className="size-4" />
+                  </>
                 )}
               </button>
             </div>
           )}
 
-          {/* Finalizada */}
+          {/* Finalized */}
           {finalized && (
             <div className="glass rounded-2xl border border-[var(--color-accent)]/30 p-6 text-center">
               <CheckCircle2 className="size-10 text-[var(--color-accent)] mx-auto mb-3" />
-              <h3 className="font-display font-bold text-lg mb-1">Sesión finalizada</h3>
+              <h3 className="font-display font-bold text-lg mb-1">Session Finalized</h3>
               <p className="text-sm text-[var(--color-muted)] mb-4">
-                Los fondos ya fueron distribuidos en la cadena.
+                Funds have been distributed on-chain.
               </p>
               <a
                 href={arbiscanUrl}
@@ -326,7 +330,7 @@ export default function SessionPage() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-sm text-[var(--color-secondary)] hover:opacity-70 transition-opacity"
               >
-                Ver en Arbiscan
+                View on Arbiscan
                 <ExternalLink className="size-3.5" />
               </a>
             </div>
@@ -358,7 +362,7 @@ function InfoCard({
   return (
     <div className={cn("rounded-xl p-3 text-center", colorMap[accent])}>
       <div className="flex justify-center mb-1 opacity-70">{icon}</div>
-      <p className="text-[10px] text-[var(--color-muted)] mb-0.5">{label}</p>
+      <p className="text-[10px] text-[var(--color-foreground)] opacity-75 mb-0.5">{label}</p>
       <p className="text-xs font-semibold leading-tight">{value}</p>
     </div>
   );
@@ -394,13 +398,13 @@ function ParticipantRow({
           <p className="text-xs font-mono">{shortAddress(addr)}</p>
           <div className="flex gap-1 mt-0.5">
             {isHost && (
-              <span className="text-[9px] text-[var(--color-primary)] font-semibold uppercase">
-                👑 host
+              <span className="text-[9px] text-[var(--color-primary)] font-semibold uppercase flex items-center gap-0.5">
+                <Crown className="size-2.5" /> host
               </span>
             )}
             {isYou && (
               <span className="text-[9px] text-[var(--color-secondary)] font-semibold uppercase">
-                · tú
+                · you
               </span>
             )}
           </div>
@@ -409,10 +413,10 @@ function ParticipantRow({
       <div>
         {deposited ? (
           <span className="flex items-center gap-1 text-[11px] text-[var(--color-accent)] font-semibold">
-            <CheckCircle2 className="size-3.5" /> Depositó
+            <CheckCircle2 className="size-3.5" /> Deposited
           </span>
         ) : (
-          <span className="text-[11px] text-[var(--color-muted)]">Pendiente</span>
+          <span className="text-[11px] text-[var(--color-foreground)] opacity-70">Pending</span>
         )}
       </div>
     </div>

@@ -11,7 +11,7 @@ import { parseGwei } from "viem";
 import type { Address } from "viem";
 import { tozlowAbi, TOZLOW_ADDRESS } from "@/abi/TozlowSession";
 import { cn, parseContractError, shortAddress } from "@/lib/utils";
-import { CheckCircle2, XCircle, Loader2, ThumbsDown } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, ThumbsDown, Timer } from "lucide-react";
 
 interface VotePanelProps {
   sessionId: bigint;
@@ -29,11 +29,11 @@ export function VotePanel({ sessionId, participants, deadline, votingEnd }: Vote
   const now = Math.floor(Date.now() / 1000);
   const isVotingOpen = now >= Number(deadline) && now < Number(votingEnd);
   const remainingMinutes = Math.max(0, Math.floor((Number(votingEnd) - now) / 60));
-
+  
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
-
-  // ¿Ya votó el caller?
+  
+  // Has voted?
   const { data: hasVoted, refetch: refetchVoted } = useReadContract({
     address: TOZLOW_ADDRESS,
     abi: tozlowAbi,
@@ -43,8 +43,17 @@ export function VotePanel({ sessionId, participants, deadline, votingEnd }: Vote
   });
 
   if (isSuccess && !successMsg) {
-    setSuccessMsg("¡Voto registrado en la cadena! 🗳️");
+    setSuccessMsg("Vote registered on-chain!");
     refetchVoted();
+  }
+
+  if (hasVoted && !successMsg) {
+    return (
+      <div className="rounded-xl bg-[var(--color-accent-glow)] border border-[var(--color-accent)]/30 p-5 text-center">
+        <CheckCircle2 className="size-8 text-[var(--color-accent)] mx-auto mb-2" />
+        <p className="font-semibold text-[var(--color-accent)]">You already voted in this session.</p>
+      </div>
+    );
   }
 
   async function handleVote() {
@@ -67,9 +76,10 @@ export function VotePanel({ sessionId, participants, deadline, votingEnd }: Vote
   if (!isVotingOpen) {
     return (
       <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-5 text-center">
-        <p className="text-[var(--color-muted)] text-sm">
-          La votación abre cuando llegue la fecha del evento ⏳
-        </p>
+        <div className="inline-flex items-center gap-2 text-sm text-[var(--color-foreground)] opacity-80">
+          <Timer className="size-4 text-[var(--color-warning)]" />
+          <span>Voting opens when the event starts.</span>
+        </div>
       </div>
     );
   }
@@ -87,18 +97,19 @@ export function VotePanel({ sessionId, participants, deadline, votingEnd }: Vote
     <div className="glass rounded-xl border border-[var(--color-glass-border)] p-5 space-y-4">
       <div className="flex items-center gap-2 mb-1">
         <ThumbsDown className="size-5 text-[var(--color-destructive)]" />
-        <h3 className="font-display font-bold text-base">¿Quién faltó?</h3>
+        <h3 className="font-display font-bold text-base">Who is missing?</h3>
       </div>
       <p className="text-sm text-[var(--color-muted)]">
-        Vota por quién no apareció. Si la mayoría coincide, ese participante pierde su depósito.
+        Vote for who didn't show up. If the majority agrees, that participant loses their deposit.
       </p>
       {isVotingOpen && remainingMinutes > 0 && (
-        <div className="rounded-lg bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30 px-3 py-2 text-xs text-[var(--color-warning)]">
-          ⏱️ Quedan ~{remainingMinutes} min para votar. ¡Quien no vote será marcado ausente!
+        <div className="rounded-lg bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30 px-3 py-2 text-xs text-[var(--color-warning)] flex items-center gap-2">
+           <Timer className="size-3.5" />
+           <span>~{remainingMinutes} mins left to vote. Non-voters will be marked absent!</span>
         </div>
       )}
 
-      {/* Lista de participantes */}
+      {/* Participants List */}
       <div className="space-y-2">
         {participants
           .filter((p) => p.toLowerCase() !== address?.toLowerCase())
@@ -141,10 +152,10 @@ export function VotePanel({ sessionId, participants, deadline, votingEnd }: Vote
         {isPending || isConfirming ? (
           <>
             <Loader2 className="size-4 animate-spin" />
-            {isPending ? "Confirmando…" : "En la cadena…"}
+            {isPending ? "Confirming…" : "On-chain…"}
           </>
         ) : (
-          "Registrar mi voto"
+          "Cast my vote"
         )}
       </button>
     </div>

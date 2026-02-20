@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { formatUsdc, formatDeadline, cn } from "@/lib/utils";
 import { StatusBadge, getSessionStatus } from "./StatusBadge";
-import { Users, Clock, Coins, ArrowRight } from "lucide-react";
+import { Users, Clock, Coins, ArrowRight, Crown } from "lucide-react";
 
 export interface SessionCardProps {
   sessionId: bigint;
@@ -31,14 +31,14 @@ export function SessionCard({
 }: SessionCardProps) {
   const votingDeadline = deadline + votingPeriod;
   const status = getSessionStatus({ active, finalized, deadline, votingDeadline });
-  const sessionLabel = `Sesión #${sessionId.toString()}`;
+  const sessionLabel = `Session #${sessionId.toString()}`;
 
   return (
     <Link href={`/session/${sessionId.toString()}`}>
       <article
         className={cn(
           "group relative glass rounded-xl p-5 transition-all duration-300",
-          "hover:border-[var(--color-primary)]/40 hover:-translate-y-0.5 hover:shadow-[0_8px_32px_oklch(72%_0.28_310_/_20%)]",
+          "hover:border-[var(--color-primary)]/40 hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]",
           "cursor-pointer select-none"
         )}
       >
@@ -52,8 +52,8 @@ export function SessionCard({
               {sessionLabel}
             </h3>
             {isHost && (
-              <span className="inline-block mt-0.5 text-[10px] font-semibold text-[var(--color-primary)] uppercase tracking-wider">
-                👑 Eres el host
+              <span className="inline-flex items-center gap-1 mt-0.5 text-[10px] font-semibold text-[var(--color-primary)] uppercase tracking-wider">
+                <Crown className="size-3" /> You are the host
               </span>
             )}
           </div>
@@ -61,22 +61,22 @@ export function SessionCard({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
           <StatChip
             icon={<Coins className="size-3.5" />}
-            label="Por persona"
+            label="Per person"
             value={`${formatUsdc(amountPerPerson)} USDC`}
             color="usdc"
           />
           <StatChip
             icon={<Users className="size-3.5" />}
-            label="Participantes"
+            label="Participants"
             value={`${depositedCount}/${participantCount}`}
             color="secondary"
           />
           <StatChip
             icon={<Clock className="size-3.5" />}
-            label="Fecha"
+            label="Date"
             value={formatDeadline(deadline)}
             color="primary"
           />
@@ -84,8 +84,8 @@ export function SessionCard({
 
         {/* Deposit progress bar */}
         <div className="space-y-1">
-          <div className="flex justify-between text-[11px] text-[var(--color-muted)]">
-            <span>Depósitos</span>
+          <div className="flex justify-between text-[11px] text-[var(--color-foreground)] opacity-75">
+            <span>Deposits</span>
             <span>{depositedCount}/{participantCount}</span>
           </div>
           <div className="h-1.5 rounded-full bg-[var(--color-border)] overflow-hidden">
@@ -125,7 +125,7 @@ function StatChip({
   return (
     <div className={cn("rounded-lg p-2 text-center", colorMap[color])}>
       <div className="flex justify-center mb-0.5 opacity-70">{icon}</div>
-      <p className="text-[10px] text-[var(--color-muted)] mb-0.5">{label}</p>
+      <p className="text-[10px] text-[var(--color-foreground)] opacity-75 mb-0.5">{label}</p>
       <p className="text-xs font-semibold leading-tight">{value}</p>
     </div>
   );

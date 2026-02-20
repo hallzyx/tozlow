@@ -7,8 +7,9 @@ import { formatEther } from "viem";
 import { useMounted } from "@/hooks/useMounted";
 import { erc20Abi, USDC_ADDRESS } from "@/abi/TozlowSession";
 import { formatUsdc, shortAddress, cn } from "@/lib/utils";
-import { Wallet, Zap, ChevronDown, LogOut } from "lucide-react";
+import { Wallet, Zap, ChevronDown, LogOut, PartyPopper } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 import { createPublicClient, http } from "viem";
 import { ConnectModal } from "./ConnectModal";
 
@@ -42,32 +43,38 @@ export function Header() {
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🎉</span>
+            <Link href="/welcome" className="flex items-center gap-2">
+              <PartyPopper className="size-6 text-[var(--color-primary)]" />
               <span className="font-display text-xl font-bold text-gradient-primary">
                 Tozlow
               </span>
-            </div>
+            </Link>
 
             {/* Right side */}
             <div className="flex items-center gap-3">
+              <Link
+                href="/welcome"
+                className="hidden md:inline-flex rounded-pill border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-foreground)] hover:border-[var(--color-primary)]/40 transition-colors"
+              >
+                Welcome
+              </Link>
               {isWrongNetwork && (
                 <div className="flex items-center gap-2">
                   <span className="rounded-pill bg-[var(--color-destructive)]/20 px-3 py-1 text-xs font-medium text-[var(--color-destructive)]">
-                    Cambiar a Arbitrum Sepolia
+                    Switch to Arbitrum Sepolia
                   </span>
                   <button
                     onClick={() => switchChain({ chainId: arbitrumSepolia.id })}
                     className="rounded-pill bg-[var(--color-primary)] text-[var(--color-primary-foreground)] px-3 py-1 text-xs font-medium hover:opacity-90 transition-colors"
                   >
-                    Cambiar red
+                    Switch Network
                   </button>
                 </div>
               )}
 
               {isConnected && address ? (
                 <div className="flex items-center gap-2">
-                  {/* Saldo USDC */}
+                  {/* USDC Balance */}
                   {usdcBalance !== undefined && (
                     <div className="hidden sm:flex items-center gap-1.5 rounded-pill bg-[var(--color-usdc-bg)] px-3 py-1.5">
                       <span className="text-[10px] font-bold text-[var(--color-usdc)] uppercase tracking-wider">USDC</span>
@@ -104,7 +111,7 @@ export function Header() {
                     {showMenu && (
                       <div className="absolute right-0 top-full mt-2 w-48 glass rounded-lg border border-[var(--color-glass-border)] p-1 shadow-lg animate-fade-in">
                         <div className="px-3 py-2 border-b border-[var(--color-border)] mb-1">
-                          <p className="text-xs text-[var(--color-muted)]">Conectado como</p>
+                          <p className="text-xs text-[var(--color-muted)]">Connected as</p>
                           <p className="text-sm font-mono font-medium truncate">{shortAddress(address)}</p>
                           {usdcBalance !== undefined && (
                             <p className="text-xs text-[var(--color-usdc)] mt-0.5">
@@ -117,7 +124,7 @@ export function Header() {
                           className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 transition-colors"
                         >
                           <LogOut className="size-4" />
-                          Desconectar
+                          Disconnect
                         </button>
                       </div>
                     )}
@@ -135,7 +142,7 @@ export function Header() {
                   )}
                 >
                   <Wallet className="size-4" />
-                  Conectar wallet
+                  Connect Wallet
                 </button>
               )}
             </div>
@@ -159,7 +166,7 @@ function HeaderSkeleton() {
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🎉</span>
+              <PartyPopper className="size-6 text-[var(--color-primary)]" />
               <span className="font-display text-xl font-bold text-gradient-primary">Tozlow</span>
             </div>
             <div className="h-9 w-36 rounded-pill shimmer-bg" />

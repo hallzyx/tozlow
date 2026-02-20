@@ -11,13 +11,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Tozlow 🎉 — Penaliza al que falta",
+  title: "Tozlow — Stake on showing up",
   description:
-    "Crea sesiones con tus amigos. Quien no aparece, pierde su depósito en USDC. Construido en Arbitrum.",
-  keywords: ["web3", "arbitrum", "usdc", "dapp", "amigos", "apuesta"],
+    "Create sessions with friends. No-shows lose their USDC deposit. Built on Arbitrum.",
+  keywords: ["web3", "arbitrum", "usdc", "dapp", "friends", "staking"],
   openGraph: {
-    title: "Tozlow 🎉",
-    description: "¿Dijiste que ibas? Entonces vas.",
+    title: "Tozlow",
+    description: "Did you say you were coming? Then show up.",
     type: "website",
   },
 };
@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.variable}>
         <Providers>
           <Header />

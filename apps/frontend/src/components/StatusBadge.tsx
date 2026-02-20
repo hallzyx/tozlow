@@ -1,46 +1,47 @@
 import { cn } from "@/lib/utils";
+import { Hourglass, Activity, CheckSquare, Lock, Banknote, CheckCircle, LucideIcon } from "lucide-react";
 
 type Status = "waiting" | "active" | "voting" | "voting-closed" | "refunded" | "finalized";
 
 const STATUS_CONFIG: Record<
   Status,
-  { label: string; emoji: string; classes: string }
+  { label: string; icon: LucideIcon; classes: string; iconColor?: string }
 > = {
   waiting: {
-    label: "Esperando depósitos",
-    emoji: "⏳",
+    label: "Waiting for deposits",
+    icon: Hourglass,
     classes:
       "bg-[var(--color-warning)]/15 text-[var(--color-warning)] border-[var(--color-warning)]/30",
   },
   active: {
-    label: "Activa",
-    emoji: "🟢",
+    label: "Active",
+    icon: Activity,
     classes:
-      "bg-[var(--color-accent-glow)] text-[var(--color-accent)] border-[var(--color-accent)]/30",
+      "bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-[var(--color-accent)]/30",
   },
   voting: {
-    label: "En votación",
-    emoji: "🗳️",
+    label: "Voting",
+    icon: CheckSquare,
     classes:
-      "bg-[var(--color-secondary-glow)] text-[var(--color-secondary)] border-[var(--color-secondary)]/30",
+      "bg-[var(--color-secondary)]/10 text-[var(--color-secondary)] border-[var(--color-secondary)]/30",
   },
   "voting-closed": {
-    label: "Votación cerrada",
-    emoji: "🔒",
+    label: "Voting Closed",
+    icon: Lock,
     classes:
-      "bg-[var(--color-warning)]/15 text-[var(--color-warning)] border-[var(--color-warning)]/30",
+      "bg-[var(--color-border)]/40 text-[var(--color-foreground)] border-[var(--color-border)]",
   },
   refunded: {
-    label: "Reembolsada",
-    emoji: "💸",
+    label: "Refunded",
+    icon: Banknote,
     classes:
-      "bg-[var(--color-border)] text-[var(--color-muted)] border-[var(--color-border)]",
+      "bg-[var(--color-border)]/50 text-[var(--color-foreground)] border-[var(--color-border)]",
   },
   finalized: {
-    label: "Finalizada",
-    emoji: "✅",
+    label: "Finalized",
+    icon: CheckCircle,
     classes:
-      "bg-[var(--color-border)] text-[var(--color-muted)] border-[var(--color-border)]",
+      "bg-[var(--color-success)]/10 text-[var(--color-success)] border-[var(--color-success)]/30",
   },
 };
 
@@ -50,16 +51,18 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const config = STATUS_CONFIG[status];
+  const config = STATUS_CONFIG[status] || STATUS_CONFIG.waiting;
+  const Icon = config.icon;
+  
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-0.5 text-xs font-medium",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm",
         config.classes,
         className
       )}
     >
-      <span>{config.emoji}</span>
+      <Icon className="size-3.5" />
       {config.label}
     </span>
   );

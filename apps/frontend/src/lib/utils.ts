@@ -25,7 +25,7 @@ export function shortAddress(addr: string): string {
 // ---- Format timestamp as local date ----
 export function formatDeadline(timestamp: bigint | number): string {
   const ms = typeof timestamp === "bigint" ? Number(timestamp) * 1000 : timestamp * 1000;
-  return new Intl.DateTimeFormat("es", {
+  return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(ms));
@@ -33,7 +33,7 @@ export function formatDeadline(timestamp: bigint | number): string {
 
 // ---- Parse contract error to user-friendly string ----
 export function parseContractError(error: unknown): string {
-  if (!error) return "Error desconocido";
+  if (!error) return "Unknown error";
   const msg = error instanceof Error ? error.message : String(error);
 
   if (error instanceof BaseError) {
@@ -41,27 +41,27 @@ export function parseContractError(error: unknown): string {
     if (revert instanceof ContractFunctionRevertedError) {
       const name = revert.data?.errorName;
       const messages: Record<string, string> = {
-        NotParticipant: "No eres participante de esta sesión.",
-        AlreadyDeposited: "Ya hiciste tu depósito.",
-        DeadlineReached: "La fecha de la reunión ya pasó.",
-        DeadlineNotReached: "La reunión aún no ha llegado.",
-        AlreadyFinalized: "Esta sesión ya fue finalizada.",
-        NotEnoughParticipants: "Mínimo 3 participantes.",
-        TooManyParticipants: "Máximo 5 participantes.",
-        TransferFailed: "Error al transferir USDC. ¿Aprobaste el monto?",
-        AlreadyVoted: "Ya votaste en esta sesión.",
-        InvalidAbsent: "Esa dirección no es participante.",
-        NotAllDeposited: "No todos han depositado aún.",
-        VotingNotOpen: "La ventana de votación aún no ha abierto.",
-        VotingClosed: "La ventana de votación ya cerró.",
-        SessionNotActive: "La sesión no está activa (faltan depósitos).",
-        CannotVoteSelf: "No puedes votar por ti mismo.",
+        NotParticipant: "You are not a participant of this session.",
+        AlreadyDeposited: "You already deposited.",
+        DeadlineReached: "The meeting date has passed.",
+        DeadlineNotReached: "The meeting date hasn't arrived yet.",
+        AlreadyFinalized: "This session is already finalized.",
+        NotEnoughParticipants: "Minimum 3 participants.",
+        TooManyParticipants: "Maximum 5 participants.",
+        TransferFailed: "Error transferring USDC. Did you approve the amount?",
+        AlreadyVoted: "You already voted in this session.",
+        InvalidAbsent: "That address is not a participant.",
+        NotAllDeposited: "Not everyone successfully deposited yet.",
+        VotingNotOpen: "Voting window hasn't opened yet.",
+        VotingClosed: "Voting window is already closed.",
+        SessionNotActive: "Session is not active (missing deposits).",
+        CannotVoteSelf: "You cannot vote for yourself.",
       };
       if (name && messages[name]) return messages[name];
     }
   }
 
-  if (msg.includes("User rejected")) return "Transacción cancelada.";
+  if (msg.includes("User rejected")) return "Transaction cancelled.";
   return msg.length > 120 ? msg.slice(0, 120) + "…" : msg;
 }
 

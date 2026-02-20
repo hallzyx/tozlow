@@ -1,92 +1,88 @@
 /* ============================================================
-   Tozlow — Design System (Tailwind CSS v4)
-   Paleta: dark mode nativo, neón violeta/cyan, glassmorphism
-   Audiencia: jóvenes / reuniones de amigos 🎉
-   ============================================================ */
+  Tozlow — Design System (Tailwind CSS v4)
+  Palette: Dark, Accessible & Vibrant
+  ============================================================ */
 
 @import "tailwindcss";
 
 /* ---- Design Tokens ---- */
 @theme {
-  /* Colores base — dark by default (dark-first design) */
-  --color-background: oklch(10% 0.015 270);
-  --color-surface: oklch(14% 0.02 270);
-  --color-surface-2: oklch(18% 0.025 270);
-  --color-foreground: oklch(96% 0.01 270);
-  --color-muted: oklch(55% 0.015 270);
-  --color-border: oklch(25% 0.025 270);
+  /* Base colors — calm dark foundation for readability */
+  --color-background: #0B1220;
+  --color-surface: #121A2B;
+  --color-surface-2: #1A2438;
+  --color-foreground: #EAF0FF;
+  --color-muted: #9AA8C1;
+  --color-border: #26324A;
 
-  /* Neón primario — violeta/magenta */
-  --color-primary: oklch(72% 0.28 310);
-  --color-primary-glow: oklch(72% 0.28 310 / 30%);
-  --color-primary-foreground: oklch(10% 0.015 270);
+  /* Primary — Magenta CTA */
+  --color-primary: #D61F69;
+  --color-primary-glow: #D61F6933;
+  --color-primary-foreground: #FFFFFF;
 
-  /* Neón secundario — cyan */
-  --color-secondary: oklch(75% 0.22 200);
-  --color-secondary-glow: oklch(75% 0.22 200 / 30%);
-  --color-secondary-foreground: oklch(10% 0.015 270);
+  /* Secondary — Violet support */
+  --color-secondary: #6D28D9;
+  --color-secondary-glow: #6D28D933;
+  --color-secondary-foreground: #FFFFFF;
 
-  /* Accent — verde lima */
-  --color-accent: oklch(80% 0.22 130);
-  --color-accent-glow: oklch(80% 0.22 130 / 25%);
+  /* Accent — Info/highlight */
+  --color-accent: #0284C7;
+  --color-accent-glow: #0284C733;
 
-  /* Estados */
-  --color-success: oklch(75% 0.2 145);
-  --color-warning: oklch(80% 0.2 75);
-  --color-destructive: oklch(65% 0.25 25);
-  --color-destructive-foreground: oklch(98% 0.01 270);
+  /* States */
+  --color-success: #15803D;
+  --color-warning: #B45309;
+  --color-destructive: #DC2626;
+  --color-destructive-foreground: #FFFFFF;
 
   /* Card glassmorphism */
-  --color-glass: oklch(20% 0.025 270 / 60%);
-  --color-glass-border: oklch(100% 0 0 / 8%);
+  --color-glass: #0B1220B3;
+  --color-glass-border: #EAF0FF1A;
 
   /* USDC badge */
-  --color-usdc: oklch(65% 0.18 250);
-  --color-usdc-bg: oklch(65% 0.18 250 / 15%);
+  --color-usdc: #2775CA;
+  --color-usdc-bg: #2775CA1F;
 
   /* Radius */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.875rem;
-  --radius-lg: 1.25rem;
-  --radius-xl: 1.75rem;
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
   --radius-pill: 9999px;
 
-  /* Tipografía */
+  /* Typography */
   --font-sans: "Inter", "system-ui", sans-serif;
   --font-display: "Cal Sans", "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
-  /* Sombras */
-  --shadow-glow-primary: 0 0 20px oklch(72% 0.28 310 / 40%);
-  --shadow-glow-secondary: 0 0 20px oklch(75% 0.22 200 / 40%);
-  --shadow-card: 0 4px 24px oklch(0% 0 0 / 40%);
+  /* Shadows */
+  --shadow-glow-primary: 0 8px 24px #D61F6940;
+  --shadow-glow-secondary: 0 8px 24px #6D28D940;
+  --shadow-card: 0 12px 32px #0000004D;
 
-  /* Animaciones */
-  --animate-fade-in: fade-in 0.25s ease-out;
-  --animate-slide-up: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
-  --animate-shimmer: shimmer 1.8s linear infinite;
+  /* Animations */
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-pulse-glow: pulse-glow 2.5s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
 
   @keyframes fade-in {
     from { opacity: 0; }
     to { opacity: 1; }
   }
   @keyframes slide-up {
-    from { transform: translateY(16px); opacity: 0; }
+    from { transform: translateY(20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
   }
   @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 12px oklch(72% 0.28 310 / 30%); }
-    50% { box-shadow: 0 0 28px oklch(72% 0.28 310 / 60%); }
+    0%, 100% { box-shadow: 0 0 12px #D61F6926; }
+    50% { box-shadow: 0 0 28px #D61F6959; }
   }
   @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
   }
 }
-
-/* ---- Light mode (opt-in) ---- */
-@custom-variant light (&:where(.light, .light *));
 
 /* ---- Base styles ---- */
 @layer base {
@@ -106,9 +102,10 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     min-height: 100dvh;
+    /* Subtle ambient gradient */
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -20%, oklch(72% 0.28 310 / 12%), transparent),
-      radial-gradient(ellipse 60% 40% at 80% 80%, oklch(75% 0.22 200 / 8%), transparent);
+      radial-gradient(circle at 15% 15%, #D61F691A, transparent 42%),
+      radial-gradient(circle at 85% 85%, #0284C726, transparent 42%);
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -117,7 +114,7 @@
     letter-spacing: -0.025em;
   }
 
-  /* Scrollbar minimalista */
+  /* Custom Scrollbar for dark theme */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
@@ -126,11 +123,11 @@
   }
 }
 
-/* ---- Utilidades custom ---- */
+/* ---- Custom Utilities ---- */
 @utility glass {
   background: var(--color-glass);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--color-glass-border);
 }
 
@@ -143,14 +140,14 @@
 }
 
 @utility text-gradient-primary {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  background: linear-gradient(135deg, var(--color-primary), #EC4899);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 @utility text-gradient-accent {
-  background: linear-gradient(135deg, var(--color-accent), var(--color-secondary));
+  background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

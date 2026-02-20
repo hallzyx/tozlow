@@ -6,8 +6,7 @@ import {
   useAccount,
   useReadContract,
 } from "wagmi";
-import { parseUnits, parseGwei } from "viem";
-import type { Address } from "viem";
+import { parseGwei } from "viem";
 import { tozlowAbi, TOZLOW_ADDRESS, erc20Abi, USDC_ADDRESS } from "@/abi/TozlowSession";
 import { cn, parseContractError, formatUsdc } from "@/lib/utils";
 import { Coins, Loader2, CheckCircle2 } from "lucide-react";
@@ -22,16 +21,16 @@ export function DepositButton({ sessionId, amountPerPerson }: DepositButtonProps
   const { address } = useAccount();
   const [error, setError] = useState("");
   const [step, setStep] = useState<"idle" | "approving" | "depositing" | "done">("idle");
-
+  
   // Approve USDC
   const { writeContract: writeApprove, data: approveHash, isPending: isApprovePending } = useWriteContract();
   const { isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({ hash: approveHash });
-
+  
   // Deposit
   const { writeContract: writeDeposit, data: depositHash, isPending: isDepositPending } = useWriteContract();
   const { isSuccess: isDepositSuccess } = useWaitForTransactionReceipt({ hash: depositHash });
-
-  // ¿Ya depositó?
+  
+  // Has deposited?
   const { data: alreadyDeposited } = useReadContract({
     address: TOZLOW_ADDRESS,
     abi: tozlowAbi,
@@ -40,7 +39,7 @@ export function DepositButton({ sessionId, amountPerPerson }: DepositButtonProps
     query: { enabled: !!address },
   });
 
-  // Allowance actual
+  // Current allowance
   const { data: allowance } = useReadContract({
     address: USDC_ADDRESS,
     abi: erc20Abi,
@@ -53,7 +52,7 @@ export function DepositButton({ sessionId, amountPerPerson }: DepositButtonProps
     return (
       <div className="flex items-center gap-2 rounded-xl bg-[var(--color-accent-glow)] border border-[var(--color-accent)]/30 px-4 py-3 text-[var(--color-accent)]">
         <CheckCircle2 className="size-5" />
-        <span className="text-sm font-semibold">Depósito confirmado ✅</span>
+        <span className="text-sm font-semibold">Deposit confirmed</span>
       </div>
     );
   }
@@ -100,7 +99,7 @@ export function DepositButton({ sessionId, amountPerPerson }: DepositButtonProps
     }
   }
 
-  // Auto-depositar tras approve exitoso
+  // Auto-deposit after successful approve
   if (isApproveSuccess && step === "approving") {
     handleDeposit();
   }
@@ -111,7 +110,7 @@ export function DepositButton({ sessionId, amountPerPerson }: DepositButtonProps
     <div className="space-y-3">
       <div className="flex items-center justify-between rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] px-4 py-3">
         <div>
-          <p className="text-xs text-[var(--color-muted)]">Tu depósito</p>
+          <p className="text-xs text-[var(--color-muted)]">Your deposit</p>
           <p className="text-lg font-bold font-display text-gradient-primary">
             {formatUsdc(amountPerPerson)} USDC
           </p>
@@ -140,18 +139,18 @@ export function DepositButton({ sessionId, amountPerPerson }: DepositButtonProps
         {isLoading ? (
           <>
             <Loader2 className="size-4 animate-spin" />
-            {step === "approving" ? "Aprobando USDC…" : "Depositando…"}
+            {step === "approving" ? "Approving USDC…" : "Depositing…"}
           </>
         ) : (
           <>
             <Coins className="size-4" />
-            Depositar y unirme
+            Deposit & Join
           </>
         )}
       </button>
 
-      <p className="text-[11px] text-center text-[var(--color-muted)]">
-        Primero aprobamos USDC y luego depositamos en el contrato — 2 txs.
+      <p className="text-[11px] text-center text-[var(--color-foreground)] opacity-75">
+        First approve USDC, then deposit — 2 transactions.
       </p>
     </div>
   );

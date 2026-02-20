@@ -7,7 +7,7 @@ import { SessionCard } from "@/components/SessionCard";
 import { CreateSessionModal } from "@/components/CreateSessionModal";
 import { useMounted } from "@/hooks/useMounted";
 import { cn } from "@/lib/utils";
-import { Plus, Wallet, PartyPopper, Loader2 } from "lucide-react";
+import { Plus, Wallet, PartyPopper, Loader2, Activity, History } from "lucide-react";
 import { createPublicClient, http } from "viem";
 import { arbitrumSepolia } from "viem/chains";
 import type { Address } from "viem";
@@ -143,21 +143,21 @@ export default function HomePage() {
   if (!isConnected) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
-        <div className="text-6xl mb-6 animate-pulse-glow">🎉</div>
+        <PartyPopper className="size-16 mb-6 text-[var(--color-primary)] animate-pulse-glow" />
         <h1 className="font-display text-4xl sm:text-5xl font-bold mb-4">
-          <span className="text-gradient-primary">¿Vas o no vas?</span>
+          <span className="text-gradient-primary">Are you going or not?</span>
         </h1>
         <p className="text-[var(--color-muted)] text-lg max-w-sm mb-2">
-          Crea una sesión con tus amigos y penaliza con USDC a quien diga que va y no aparezca.
+          Create a session with your friends and penalize with USDC anyone who says they're going but doesn't show up.
         </p>
         <p className="text-[var(--color-muted)] text-sm mb-10">
-          Construido en{" "}
+          Built on{" "}
           <span className="text-[var(--color-secondary)] font-semibold">Arbitrum Sepolia</span>{" "}
-          con Stylus.
+          with Stylus.
         </p>
         <div className="flex items-center gap-2 text-[var(--color-muted)] text-sm">
           <Wallet className="size-4" />
-          Conecta tu wallet para empezar
+          Connect your wallet to start
         </div>
       </div>
     );
@@ -170,11 +170,11 @@ export default function HomePage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="font-display text-2xl sm:text-3xl font-bold">
-            Mis sesiones{" "}
+            My Sessions{" "}
             <span className="text-gradient-primary">{sessions.length > 0 ? `(${sessions.length})` : ""}</span>
           </h1>
           <p className="text-[var(--color-muted)] text-sm mt-1">
-            Tus reuniones activas y pasadas en la cadena
+            Your active and past on-chain meetings
           </p>
         </div>
         <button
@@ -187,8 +187,8 @@ export default function HomePage() {
           )}
         >
           <Plus className="size-4" />
-          <span className="hidden sm:block">Nueva sesión</span>
-          <span className="sm:hidden">Nueva</span>
+          <span className="hidden sm:block">New Session</span>
+          <span className="sm:hidden">New</span>
         </button>
       </div>
 
@@ -204,10 +204,10 @@ export default function HomePage() {
         <div className="glass rounded-2xl border border-[var(--color-glass-border)] p-12 text-center animate-slide-up">
           <PartyPopper className="size-12 text-[var(--color-primary)] mx-auto mb-4 opacity-80" />
           <h3 className="font-display text-lg font-bold mb-2">
-            Aún no tienes sesiones
+            No sessions yet
           </h3>
           <p className="text-[var(--color-muted)] text-sm mb-6">
-            Crea la primera y compártela con tus amigos.
+            Create your first one and share it with friends.
           </p>
           <button
             onClick={() => setModalOpen(true)}
@@ -219,7 +219,7 @@ export default function HomePage() {
             )}
           >
             <Plus className="size-4" />
-            Crear primera sesión
+            Create First Session
           </button>
         </div>
       )}
@@ -242,7 +242,7 @@ export default function HomePage() {
             {activeSessions.length > 0 && (
               <div>
                 <h2 className="font-display text-lg font-bold mb-3 flex items-center gap-2">
-                  🟢 Sesiones activas ({activeSessions.length})
+                  <Activity className="size-5 text-[var(--color-success)]" /> Active Sessions ({activeSessions.length})
                 </h2>
                 <div className="grid sm:grid-cols-2 gap-4">
                   {activeSessions.map((s) => (
@@ -260,7 +260,7 @@ export default function HomePage() {
             {expiredSessions.length > 0 && (
               <div>
                 <h2 className="font-display text-lg font-bold mb-3 flex items-center gap-2">
-                  📋 Historial ({expiredSessions.length})
+                  <History className="size-5 text-[var(--color-muted)]" /> History ({expiredSessions.length})
                 </h2>
                 <div className="grid sm:grid-cols-2 gap-4 opacity-80">
                   {expiredSessions.map((s) => (

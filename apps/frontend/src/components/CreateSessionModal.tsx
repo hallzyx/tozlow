@@ -5,7 +5,7 @@ import { useWriteContract, useWaitForTransactionReceipt, useAccount } from "wagm
 import { parseUnits, parseGwei } from "viem";
 import { tozlowAbi, TOZLOW_ADDRESS } from "@/abi/TozlowSession";
 import { cn, parseContractError } from "@/lib/utils";
-import { X, Plus, Trash2, Calendar, Users, Coins, Loader2 } from "lucide-react";
+import { X, Plus, Trash2, Calendar, Users, Coins, Loader2, Clock, Rocket, Sparkles } from "lucide-react";
 
 interface CreateSessionModalProps {
   open: boolean;
@@ -51,7 +51,7 @@ export function CreateSessionModal({
     e.preventDefault();
     setError("");
 
-    if (!address) { setError("Conecta tu wallet primero."); return; }
+    if (!address) { setError("Connect your wallet first."); return; }
 
     const allParticipants = [
       address,
@@ -59,7 +59,7 @@ export function CreateSessionModal({
     ] as `0x${string}`[];
 
     if (allParticipants.length < 3) {
-      setError("Necesitas al menos 2 amigos más (3 total).");
+      setError("You need at least 2 more friends (3 total).");
       return;
     }
 
@@ -67,7 +67,7 @@ export function CreateSessionModal({
       new Date(`${deadlineDate}T${deadlineTime}:00`).getTime() / 1000
     );
     if (isNaN(deadlineTimestamp) || deadlineTimestamp <= Date.now() / 1000) {
-      setError("La fecha tiene que ser en el futuro.");
+      setError("The date must be in the future.");
       return;
     }
 
@@ -116,9 +116,9 @@ export function CreateSessionModal({
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="font-display text-xl font-bold">Nueva sesión 🎉</h2>
+              <h2 className="font-display text-xl font-bold flex items-center gap-2">New Session <Sparkles className="size-5 text-[var(--color-primary)]" /></h2>
               <p className="text-sm text-[var(--color-muted)] mt-0.5">
-                Crea la apuesta para tu próxima reunión
+                Create the stake for your next meeting
               </p>
             </div>
             <button
@@ -134,7 +134,7 @@ export function CreateSessionModal({
             <div className="space-y-1.5">
               <label className="text-sm font-medium flex items-center gap-1.5">
                 <Coins className="size-4 text-[var(--color-usdc)]" />
-                Monto por persona (USDC)
+                Amount per person (USDC)
               </label>
               <div className="relative">
                 <input
@@ -162,7 +162,7 @@ export function CreateSessionModal({
               <div className="space-y-1.5">
                 <label className="text-sm font-medium flex items-center gap-1.5">
                   <Calendar className="size-4 text-[var(--color-secondary)]" />
-                  Fecha
+                  Date
                 </label>
                 <input
                   type="date"
@@ -177,7 +177,7 @@ export function CreateSessionModal({
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Hora</label>
+                <label className="text-sm font-medium">Time</label>
                 <input
                   type="time"
                   value={deadlineTime}
@@ -195,7 +195,7 @@ export function CreateSessionModal({
             {/* Tiempo de votación */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium flex items-center gap-1.5">
-                🗳️ Tiempo de votación (minutos)
+                <Clock className="size-4 text-[var(--color-accent)]" /> Voting Time (minutes)
               </label>
               <input
                 type="number"
@@ -211,8 +211,8 @@ export function CreateSessionModal({
                   "transition-colors"
                 )}
               />
-              <p className="text-[11px] text-[var(--color-muted)]">
-                Ventana para votar después de la hora del evento. Quien no vote será marcado ausente.
+              <p className="text-[11px] text-[var(--color-foreground)] opacity-75">
+                Voting window after the event time. Anyone who doesn't vote will be marked absent.
               </p>
             </div>
 
@@ -220,13 +220,13 @@ export function CreateSessionModal({
             <div className="space-y-1.5">
               <label className="text-sm font-medium flex items-center gap-1.5">
                 <Users className="size-4 text-[var(--color-primary)]" />
-                Wallets de tus amigos
+                Friends' Wallets
               </label>
               <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-3 space-y-2">
                 {/* Host (autoagregado) */}
                 <div className="flex items-center gap-2">
                   <span className="text-xs rounded-pill bg-[var(--color-primary-glow)] text-[var(--color-primary)] px-2 py-0.5 font-semibold">
-                    Tú (host)
+                    You (host)
                   </span>
                   <span className="text-xs font-mono text-[var(--color-muted)] truncate flex-1">
                     {address ?? "..."}
@@ -267,12 +267,12 @@ export function CreateSessionModal({
                     className="flex items-center gap-1.5 text-xs text-[var(--color-primary)] hover:opacity-70 transition-opacity mt-1"
                   >
                     <Plus className="size-3.5" />
-                    Agregar amigo
+                    Add friend
                   </button>
                 )}
               </div>
-              <p className="text-[11px] text-[var(--color-muted)]">
-                De 3 a 5 participantes total (incluido tú).
+              <p className="text-[11px] text-[var(--color-foreground)] opacity-75">
+                3 to 5 participants total (including you).
               </p>
             </div>
 
@@ -299,10 +299,12 @@ export function CreateSessionModal({
               {isPending || isConfirming ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  {isPending ? "Confirmando en wallet…" : "En la cadena…"}
+                  {isPending ? "Confirming in wallet…" : "On chain Request…"}
                 </>
               ) : (
-                "Crear sesión 🚀"
+                <>
+                  Create Session <Rocket className="size-4" />
+                </>
               )}
             </button>
           </form>
