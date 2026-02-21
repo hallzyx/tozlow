@@ -1,8 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { parseGwei } from "viem";
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from "wagmi";
 import type { Address } from "viem";
 import { tozlowAbi, TOZLOW_ADDRESS } from "@/abi/TozlowSession";
 import { useMounted } from "@/hooks/useMounted";
@@ -10,14 +9,13 @@ import { StatusBadge, getSessionStatus } from "@/components/StatusBadge";
 import { DepositButton } from "@/components/DepositButton";
 import { VotePanel } from "@/components/VotePanel";
 import { formatUsdc, formatDeadline, shortAddress, parseContractError, cn } from "@/lib/utils";
+import { useFreshGasParams } from "@/hooks/useFreshGasParams";
 import {
   ArrowLeft, Users, Coins, Calendar, Copy, CheckCircle2,
   Loader2, Trophy, ExternalLink, Crown, Lock,
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { createPublicClient, http } from "viem";
-import { arbitrumSepolia } from "viem/chains";
 
 export default function SessionPage() {
   const params = useParams();
@@ -30,14 +28,8 @@ export default function SessionPage() {
   const [allParticipants, setAllParticipants] = useState<Address[]>([]);
   const [loadingParts, setLoadingParts] = useState(true);
 
-  const rpcUrl =
-    process.env.NEXT_PUBLIC_ARBITRUM_SEPOLIA_RPC ??
-    "https://sepolia-rollup.arbitrum.io/rpc";
-
-  const publicClient = createPublicClient({
-    chain: arbitrumSepolia,
-    transport: http(rpcUrl),
-  });
+  const publicClient = usePublicClient();
+  const getFreshGasParams = useFreshGasParams();
 
   // Read session data
   const { data: sessionData, isLoading: loadingSession, refetch } = useReadContract({
@@ -71,10 +63,22 @@ export default function SessionPage() {
   }, [sessionData]);
 
   // Finalize session
-  const { writeContract: writeFinalize, data: finalHash, isPending: isFinalizePending } = useWriteContract();
+  const {
+    writeContract: writeFinalize,
+    data: finalHash,
+    isPending: isFinalizePending,
+    error: finalizeWriteError,
+  } = useWriteContract();
   const { isLoading: isFinConfirming, isSuccess: isFinSuccess } = useWaitForTransactionReceipt({ hash: finalHash });
-  
-  if (isFinSuccess) refetch();
+
+  useEffect(() => {
+    if (isFinSuccess) refetch();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFinSuccess]);
+
+  useEffect(() => {
+    if (finalizeWriteError) setFinalizeError(parseContractError(finalizeWriteError));
+  }, [finalizeWriteError]);
 
   if (!mounted || loadingSession || loadingParts) {
     return (
@@ -117,20 +121,16 @@ export default function SessionPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  function handleFinalize() {
+  async function handleFinalize() {
     setFinalizeError("");
-    try {
-      writeFinalize({
-        address: TOZLOW_ADDRESS,
-        abi: tozlowAbi,
-        functionName: "finalizeSession",
-        args: [sessionId],
-        maxFeePerGas: parseGwei('50'),
-        maxPriorityFeePerGas: parseGwei('2'),
-      });
-    } catch (err) {
-      setFinalizeError(parseContractError(err));
-    }
+    const gasParams = await getFreshGasParams();
+    writeFinalize({
+      address: TOZLOW_ADDRESS,
+      abi: tozlowAbi,
+      functionName: "finalizeSession",
+      args: [sessionId],
+      ...gasParams,
+    });
   }
 
   const arbiscanUrl = `https://sepolia.arbiscan.io/address/${TOZLOW_ADDRESS}`;

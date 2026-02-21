@@ -5,12 +5,12 @@ import {
   useWaitForTransactionReceipt,
   useAccount,
   useReadContract,
+  usePublicClient,
 } from "wagmi";
-import { parseGwei } from "viem";
 import { tozlowAbi, TOZLOW_ADDRESS, erc20Abi, USDC_ADDRESS } from "@/abi/TozlowSession";
 import { cn, parseContractError, formatUsdc } from "@/lib/utils";
 import { Coins, Loader2, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface DepositButtonProps {
   sessionId: bigint;
@@ -19,34 +19,100 @@ interface DepositButtonProps {
 
 export function DepositButton({ sessionId, amountPerPerson }: DepositButtonProps) {
   const { address } = useAccount();
+  const publicClient = usePublicClient();
   const [error, setError] = useState("");
   const [step, setStep] = useState<"idle" | "approving" | "depositing" | "done">("idle");
-  
+  const depositTriggered = useRef(false);
+
+  // Obtiene el maxFeePerGas fresco del bloque actual para evitar
+  // el error "max fee per gas less than block base fee" en Arbitrum.
+  async function getFreshGasParams() {
+    if (!publicClient) return {};
+    try {
+      const block = await publicClient.getBlock({ blockTag: "latest" });
+      const baseFee = block.baseFeePerGas ?? 20_000_000n; // fallback 0.02 gwei
+      // +50% de buffer sobre el base fee actual
+      const maxFeePerGas = (baseFee * 3n) / 2n;
+      // Priority fee mínimo en Arbitrum (no secuenciador lo requiere, pero sí > 0)
+      const maxPriorityFeePerGas = 1_000_000n; // 0.001 gwei
+      return { maxFeePerGas, maxPriorityFeePerGas };
+    } catch {
+      return {};
+    }
+  }
+
   // Approve USDC
-  const { writeContract: writeApprove, data: approveHash, isPending: isApprovePending } = useWriteContract();
+  const {
+    writeContract: writeApprove,
+    data: approveHash,
+    isPending: isApprovePending,
+    error: approveError,
+    reset: resetApprove,
+  } = useWriteContract();
   const { isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({ hash: approveHash });
-  
+
   // Deposit
-  const { writeContract: writeDeposit, data: depositHash, isPending: isDepositPending } = useWriteContract();
+  const {
+    writeContract: writeDeposit,
+    data: depositHash,
+    isPending: isDepositPending,
+    error: depositError,
+    reset: resetDeposit,
+  } = useWriteContract();
   const { isSuccess: isDepositSuccess } = useWaitForTransactionReceipt({ hash: depositHash });
-  
+
   // Has deposited?
   const { data: alreadyDeposited } = useReadContract({
     address: TOZLOW_ADDRESS,
     abi: tozlowAbi,
     functionName: "hasDeposited",
-    args: sessionId && address ? [sessionId, address] : undefined,
+    args: sessionId !== undefined && address ? [sessionId, address] : undefined,
     query: { enabled: !!address },
   });
 
   // Current allowance
-  const { data: allowance } = useReadContract({
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: USDC_ADDRESS,
     abi: erc20Abi,
     functionName: "allowance",
     args: address ? [address, TOZLOW_ADDRESS] : undefined,
     query: { enabled: !!address },
   });
+
+  // Handle approve errors (user rejection, gas estimation, etc.)
+  useEffect(() => {
+    if (approveError) {
+      setError(parseContractError(approveError));
+      setStep("idle");
+    }
+  }, [approveError]);
+
+  // Handle deposit errors
+  useEffect(() => {
+    if (depositError) {
+      setError(parseContractError(depositError));
+      setStep("idle");
+    }
+  }, [depositError]);
+
+  // Auto-deposit after successful approve — in a useEffect, NOT during render
+  useEffect(() => {
+    if (isApproveSuccess && step === "approving" && !depositTriggered.current) {
+      depositTriggered.current = true;
+      // Refetch allowance + fees frescos del bloque actual antes de depositar
+      Promise.all([refetchAllowance(), getFreshGasParams()]).then(([, gasParams]) => {
+        setStep("depositing");
+        writeDeposit({
+          address: TOZLOW_ADDRESS,
+          abi: tozlowAbi,
+          functionName: "deposit",
+          args: [sessionId],
+          ...gasParams,
+        });
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isApproveSuccess, step, sessionId, refetchAllowance, writeDeposit]);
 
   if (isDepositSuccess || alreadyDeposited) {
     return (
@@ -59,49 +125,33 @@ export function DepositButton({ sessionId, amountPerPerson }: DepositButtonProps
 
   async function handleApproveAndDeposit() {
     setError("");
+    depositTriggered.current = false;
+    resetApprove();
+    resetDeposit();
 
-    const needsApproval = !allowance || allowance < amountPerPerson;
+    const gasParams = await getFreshGasParams();
+    const needsApproval = allowance === undefined || allowance < amountPerPerson;
 
     if (needsApproval) {
       setStep("approving");
-      try {
-        writeApprove({
-          address: USDC_ADDRESS,
-          abi: erc20Abi,
-          functionName: "approve",
-          args: [TOZLOW_ADDRESS, amountPerPerson],
-          maxFeePerGas: parseGwei('50'),
-          maxPriorityFeePerGas: parseGwei('2'),
-        });
-      } catch (err) {
-        setError(parseContractError(err));
-        setStep("idle");
-      }
+      writeApprove({
+        address: USDC_ADDRESS,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [TOZLOW_ADDRESS, amountPerPerson],
+        ...gasParams,
+      });
     } else {
-      handleDeposit();
-    }
-  }
-
-  function handleDeposit() {
-    setStep("depositing");
-    try {
+      // Already approved, go straight to deposit
+      setStep("depositing");
       writeDeposit({
         address: TOZLOW_ADDRESS,
         abi: tozlowAbi,
         functionName: "deposit",
         args: [sessionId],
-        maxFeePerGas: parseGwei('50'),
-        maxPriorityFeePerGas: parseGwei('2'),
+        ...gasParams,
       });
-    } catch (err) {
-      setError(parseContractError(err));
-      setStep("idle");
     }
-  }
-
-  // Auto-deposit after successful approve
-  if (isApproveSuccess && step === "approving") {
-    handleDeposit();
   }
 
   const isLoading = isApprovePending || isDepositPending || step === "approving";

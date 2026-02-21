@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useWriteContract, useWaitForTransactionReceipt, useAccount } from "wagmi";
-import { parseUnits, parseGwei } from "viem";
+import { parseUnits } from "viem";
 import { tozlowAbi, TOZLOW_ADDRESS } from "@/abi/TozlowSession";
 import { cn, parseContractError } from "@/lib/utils";
+import { useFreshGasParams } from "@/hooks/useFreshGasParams";
 import { X, Plus, Trash2, Calendar, Users, Coins, Loader2, Clock, Rocket, Sparkles } from "lucide-react";
 
 interface CreateSessionModalProps {
@@ -28,10 +29,17 @@ export function CreateSessionModal({
   const [participants, setParticipants] = useState<string[]>(["", ""]);
   const [error, setError] = useState("");
 
-  const { writeContract, data: hash, isPending } = useWriteContract();
+  const {
+    writeContract,
+    data: hash,
+    isPending,
+    error: writeError,
+    reset: resetWrite,
+  } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const hasHandledSuccess = useRef(false);
+  const getFreshGasParams = useFreshGasParams();
 
   function addParticipant() {
     if (participants.length < 4) setParticipants([...participants, ""]);
@@ -47,9 +55,26 @@ export function CreateSessionModal({
     setParticipants(updated);
   }
 
+  // Handle wagmi write errors (user rejection, gas estimation failure, etc.)
+  useEffect(() => {
+    if (writeError) {
+      setError(parseContractError(writeError));
+    }
+  }, [writeError]);
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (open) {
+      setError("");
+      hasHandledSuccess.current = false;
+      resetWrite();
+    }
+  }, [open, resetWrite]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    resetWrite();
 
     if (!address) { setError("Connect your wallet first."); return; }
 
@@ -73,19 +98,15 @@ export function CreateSessionModal({
 
     const amountWei = parseUnits(amountUsdc || "1", 6);
     const votingPeriodSeconds = BigInt(Math.max(1, parseInt(votingMinutes) || 60) * 60);
+    const gasParams = await getFreshGasParams();
 
-    try {
-      writeContract({
-        address: TOZLOW_ADDRESS,
-        abi: tozlowAbi,
-        functionName: "createSession",
-        args: [amountWei, BigInt(deadlineTimestamp), votingPeriodSeconds, allParticipants],
-        maxFeePerGas: parseGwei('50'),
-        maxPriorityFeePerGas: parseGwei('2'),
-      });
-    } catch (err) {
-      setError(parseContractError(err));
-    }
+    writeContract({
+      address: TOZLOW_ADDRESS,
+      abi: tozlowAbi,
+      functionName: "createSession",
+      args: [amountWei, BigInt(deadlineTimestamp), votingPeriodSeconds, allParticipants],
+      ...gasParams,
+    });
   }
 
   // Cerrar al confirmar

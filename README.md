@@ -47,27 +47,49 @@ tozlow/
 ## Quick Start
 
 ```bash
-# 1. Install dependencies
+# 1. Instalar dependencias
 pnpm install
 
-# 2. Setup environment variables
+# 2. Configurar variables de entorno
 cp apps/frontend/.env.example apps/frontend/.env.local
 
-# 3. Deploy contract to testnet
+# 3. Desplegar contrato en testnet
 pnpm contract:deploy:testnet
 
-# 4. Set contract address in .env.local
+# 4. Inicializar el contrato con la dirección de USDC
+#    (paso obligatorio después de cualquier deploy, o el depósito fallará)
+export PRIVATE_KEY=0x...
+export ARBITRUM_SEPOLIA_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/TU_KEY
+CONTRACT_ADDRESS=0x<contrato> ./apps/contracts-stylus/initialize.sh
+
+# 5. Actualizar .env.local con la dirección del contrato
 # NEXT_PUBLIC_TOZLOW_ADDRESS=0x...
 
-# 5. Start frontend
+# 6. Arrancar el frontend
 pnpm dev
 ```
+
+> **⚠️ Importante:** El paso 4 (`initialize`) es **obligatorio** tras cada deploy.
+> Sin él, `usdcAddress()` devuelve `0x000...000` y todas las transacciones
+> de depósito fallan con una estimación de gas absurda en MetaMask.
 
 ## Networks
 
 | Network | Chain ID | RPC |
 |-----|----------|-----|
 | Arbitrum Sepolia | 421614 | https://sepolia-rollup.arbitrum.io/rpc |
+
+## Gas en Arbitrum
+
+El frontend obtiene fees frescos del bloque actual antes de enviar **cualquier** transacción (`createSession`, `deposit`, `castVote`, `finalizeSession`). Esto evita el error **"max fee per gas less than block base fee"** que ocurre cuando el base fee del siguiente bloque es mayor al estimado en el momento del click.
+
+El cálculo usa:
+```
+maxFeePerGas = baseFeePerGas_actual × 1.5
+maxPriorityFeePerGas = 0.001 gwei
+```
+
+En Arbitrum Sepolia el gas base es ~0.02 gwei, por lo que el costo real sigue siendo fracciones de centavo.
 
 ## Resources
 

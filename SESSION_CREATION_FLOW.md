@@ -74,14 +74,19 @@ Tozlow es una dApp que permite crear **sesiones de responsabilidad grupal** dond
 createSession(
     uint256 amountPerPerson,    // Monto en USDC (6 decimales)
     uint256 deadline,           // Timestamp Unix
+    uint256 votingPeriod,       // Segundos de ventana de votación
     address[] participants      // Array de direcciones
 )
 ```
 
+**Gas dinámico:**
+Antes de enviar la transacción, el frontend consulta el bloque más reciente para calcular `maxFeePerGas = baseFee × 1.5`. Esto evita el error *"max fee per gas less than block base fee"* que ocurre en Arbitrum cuando el base fee sube entre la estimación y la inclusión del bloque.
+
 **Estados durante el envío:**
-1. **Pendiente:** `isPending = true` → Muestra spinner
-2. **Confirmando:** `isConfirming = true` → Espera confirmación en blockchain
-3. **Éxito:** `isSuccess = true` → Modal se cierra, callback `onSuccess`
+1. **Pendiente:** `isPending = true` → Muestra spinner + "Confirming in wallet…"
+2. **Confirmando:** `isConfirming = true` → Espera confirmación en blockchain + "On chain Request…"
+3. **Éxito:** `isSuccess = true` → Modal se cierra automáticamente, callback `onSuccess`
+4. **Error:** `writeError` del hook → Mensaje de error mostrado en el formulario, estado reseteado
 
 ### 5. Post-Creación
 
@@ -109,14 +114,20 @@ Una vez creada la sesión, los participantes pueden:
 
 ## Estados de Error
 
-### Errores de Validación
+### Errores de Validación (frontend)
 - **"Conecta tu wallet primero"**: Wallet no conectada
 - **"Necesitas al menos 2 amigos más (3 total)"**: Menos de 3 participantes
 - **"La fecha tiene que ser en el futuro"**: Fecha/hora inválida o pasada
 
+### Errores de Wagmi/Red
+- Los errores de `writeContract` (rechazo del usuario, fallo de estimación de gas) se capturan vía la propiedad `error` del hook `useWriteContract` en un `useEffect`, no con `try/catch` síncronos.
+- El estado del modal se resetea con `resetWrite()` al volver a abrirlo para evitar que estados sucios de una TX anterior bloqueen el formulario.
+
 ### Errores de Contrato
-- **Reversiones del contrato**: Se parsean y muestran mensajes amigables
-- **Errores de red**: Problemas de conexión con Arbitrum Sepolia
+- **Reversiones del contrato**: Se parsean con `parseContractError` y muestran mensajes legibles.
+- **`AlreadyInitialized`**: El contrato ya fue inicializado, no se puede volver a llamar `initialize`.
+- **`NotParticipant`**: La wallet no está en la lista de participantes de esa sesión.
+- **`DeadlineReached`**: El timestamp de la sesión ya expiró, no se puede depositar.
 
 ## Interfaz de Usuario
 
@@ -141,18 +152,32 @@ Una vez creada la sesión, los participantes pueden:
 
 ### Smart Contract Integration
 - **ABI:** `tozlowAbi` importado desde `@/abi/TozlowSession`
-- **Address:** `TOZLOW_ADDRESS` desde variables de entorno
+- **Address:** `TOZLOW_ADDRESS` desde variable de entorno `NEXT_PUBLIC_TOZLOW_ADDRESS`
 - **Hooks:** `useWriteContract` + `useWaitForTransactionReceipt`
+- **Inicialización:** El contrato requiere llamar `initialize(usdcAddress)` una vez tras el deploy (ver `initialize.sh`). Sin esto, todos los depósitos fallan.
+
+### Gas Dinámico
+- Hook `useFreshGasParams` en `src/hooks/useFreshGasParams.ts`
+- Consulta `eth_getBlockByNumber("latest")` justo antes de cada `writeContract`
+- Calcula `maxFeePerGas = baseFee × 1.5` y `maxPriorityFeePerGas = 0.001 gwei`
+- Aplicado en: `createSession`, `approve`, `deposit`, `castVote`, `finalizeSession`
 
 ### Gestión de Estado
 - **Local state:** `useState` para campos del formulario
-- **Error handling:** `parseContractError` para errores legibles
+- **Error handling:** Propiedad `error` del hook + `useEffect` (no `try/catch` síncronos)
+- **Reset:** `resetWrite()` al reabrir el modal y antes de cada submit para limpiar estados sucios
 - **Success callback:** Actualiza lista de sesiones padre
+
+### Flujo Deposit (2 transacciones)
+1. **Approve:** `USDC.approve(TOZLOW_ADDRESS, amount)` con gas fresco
+2. Espera confirmación on-chain via `useWaitForTransactionReceipt`
+3. **Deposit:** re-fetcha `allowance` + obtiene gas fresco nuevo → `deposit(sessionId)`
+4. El paso 3 ocurre en un `useEffect([isApproveSuccess])` con un `ref` guard para evitar dobles llamadas
 
 ### Validaciones Frontend
 - **Tipo checking:** TypeScript para direcciones `0x${string}[]`
 - **Formato numérico:** `parseUnits(amount, 6)` para USDC
-- **Timestamp:** Conversión manual de fecha/hora local
+- **Timestamp:** Conversión de fecha/hora local a Unix timestamp
 
 ## Flujo de Participantes
 

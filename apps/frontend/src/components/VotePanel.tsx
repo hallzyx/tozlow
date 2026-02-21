@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useWriteContract,
   useWaitForTransactionReceipt,
   useAccount,
   useReadContract,
 } from "wagmi";
-import { parseGwei } from "viem";
 import type { Address } from "viem";
 import { tozlowAbi, TOZLOW_ADDRESS } from "@/abi/TozlowSession";
 import { cn, parseContractError, shortAddress } from "@/lib/utils";
+import { useFreshGasParams } from "@/hooks/useFreshGasParams";
 import { CheckCircle2, XCircle, Loader2, ThumbsDown, Timer } from "lucide-react";
 
 interface VotePanelProps {
@@ -29,10 +29,16 @@ export function VotePanel({ sessionId, participants, deadline, votingEnd }: Vote
   const now = Math.floor(Date.now() / 1000);
   const isVotingOpen = now >= Number(deadline) && now < Number(votingEnd);
   const remainingMinutes = Math.max(0, Math.floor((Number(votingEnd) - now) / 60));
-  
-  const { writeContract, data: hash, isPending } = useWriteContract();
+  const getFreshGasParams = useFreshGasParams();
+
+  const {
+    writeContract,
+    data: hash,
+    isPending,
+    error: writeError,
+  } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
-  
+
   // Has voted?
   const { data: hasVoted, refetch: refetchVoted } = useReadContract({
     address: TOZLOW_ADDRESS,
@@ -42,35 +48,42 @@ export function VotePanel({ sessionId, participants, deadline, votingEnd }: Vote
     query: { enabled: !!address },
   });
 
-  if (isSuccess && !successMsg) {
-    setSuccessMsg("Vote registered on-chain!");
-    refetchVoted();
-  }
+  // Mover side-effects fuera del render
+  useEffect(() => {
+    if (isSuccess) {
+      setSuccessMsg("Vote registered on-chain!");
+      refetchVoted();
+    }
+  }, [isSuccess, refetchVoted]);
 
-  if (hasVoted && !successMsg) {
-    return (
-      <div className="rounded-xl bg-[var(--color-accent-glow)] border border-[var(--color-accent)]/30 p-5 text-center">
-        <CheckCircle2 className="size-8 text-[var(--color-accent)] mx-auto mb-2" />
-        <p className="font-semibold text-[var(--color-accent)]">You already voted in this session.</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (writeError) {
+      setError(parseContractError(writeError));
+    }
+  }, [writeError]);
 
   async function handleVote() {
     if (!selectedAbsent) return;
     setError("");
-    try {
-      writeContract({
-        address: TOZLOW_ADDRESS,
-        abi: tozlowAbi,
-        functionName: "castVote",
-        args: [sessionId, selectedAbsent],
-        maxFeePerGas: parseGwei('50'),
-        maxPriorityFeePerGas: parseGwei('2'),
-      });
-    } catch (err) {
-      setError(parseContractError(err));
-    }
+    const gasParams = await getFreshGasParams();
+    writeContract({
+      address: TOZLOW_ADDRESS,
+      abi: tozlowAbi,
+      functionName: "castVote",
+      args: [sessionId, selectedAbsent],
+      ...gasParams,
+    });
+  }
+
+  if (hasVoted || successMsg) {
+    return (
+      <div className="rounded-xl bg-[var(--color-accent-glow)] border border-[var(--color-accent)]/30 p-5 text-center">
+        <CheckCircle2 className="size-8 text-[var(--color-accent)] mx-auto mb-2" />
+        <p className="font-semibold text-[var(--color-accent)]">
+          {successMsg || "You already voted in this session."}
+        </p>
+      </div>
+    );
   }
 
   if (!isVotingOpen) {
@@ -80,15 +93,6 @@ export function VotePanel({ sessionId, participants, deadline, votingEnd }: Vote
           <Timer className="size-4 text-[var(--color-warning)]" />
           <span>Voting opens when the event starts.</span>
         </div>
-      </div>
-    );
-  }
-
-  if (successMsg) {
-    return (
-      <div className="rounded-xl bg-[var(--color-accent-glow)] border border-[var(--color-accent)]/30 p-5 text-center">
-        <CheckCircle2 className="size-8 text-[var(--color-accent)] mx-auto mb-2" />
-        <p className="font-semibold text-[var(--color-accent)]">{successMsg}</p>
       </div>
     );
   }
