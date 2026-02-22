@@ -1,33 +1,33 @@
-Despliegue del contrato Stylus (TozlowSession)
+# Stylus Contract Deployment (TozlowSession)
 
-1) Añade un archivo de entorno local en este folder (no lo comites):
-   - Copia `.env.deploy.example` -> `.env.deploy`
+1) Add a local environment file in this folder (do not commit it):
+   - Copy `.env.deploy.example` -> `.env.deploy`
 
-2) Rellena los valores:
+2) Fill in the values:
    PRIVATE_KEY=0x...
-   ARBITRUM_SEPOLIA_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/TU_KEY
+   ARBITRUM_SEPOLIA_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/YOUR_KEY
 
-3) Desde la raíz del repo despliega:
+3) From the root of the repo, deploy:
 
 ```bash
 pnpm --filter contracts-stylus run deploy:testnet
 ```
 
-4) Copia la dirección del contrato desplegado a `apps/frontend/.env.local`:
-   NEXT_PUBLIC_TOZLOW_ADDRESS=0x<nueva_dirección>
+4) Copy the deployed contract address to `apps/frontend/.env.local`:
+   NEXT_PUBLIC_TOZLOW_ADDRESS=0x<new_address>
 
-5) **⚠️ Inicializa el contrato (OBLIGATORIO):**
-   Sin este paso el contrato tiene `usdcAddress = 0x000...000` y todos
-   los depósitos revertirán con una estimación de gas absurda en MetaMask.
+5) **⚠️ Initialize the contract (MANDATORY):**
+   Without this step, the contract has `usdcAddress = 0x000...000` and all
+   deposits will revert with an absurd gas estimation in MetaMask.
 
 ```bash
-CONTRACT_ADDRESS=0x<nueva_dirección> ./apps/contracts-stylus/initialize.sh
+CONTRACT_ADDRESS=0x<new_address> ./apps/contracts-stylus/initialize.sh
 ```
 
-   El script lee `PRIVATE_KEY` y `ARBITRUM_SEPOLIA_RPC_URL` de `.env.deploy`
-   y verifica que `usdcAddress()` devuelva la dirección correcta al finalizar.
+   The script reads `PRIVATE_KEY` and `ARBITRUM_SEPOLIA_RPC_URL` from `.env.deploy`
+   and verifies that `usdcAddress()` returns the correct address upon completion.
 
-Notas de seguridad:
-- Usa una cuenta de prueba, no tu cuenta principal.
-- El archivo `.env.deploy` nunca debe ser commiteado (está en `.gitignore`).
-- El script limpia `PRIVATE_KEY` del entorno al terminar con `unset PRIVATE_KEY`.
+Security notes:
+- Use a test account, not your main account.
+- The `.env.deploy` file should never be committed (it is in `.gitignore`).
+- The script clears `PRIVATE_KEY` from the environment when finished using `unset PRIVATE_KEY`.

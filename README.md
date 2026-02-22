@@ -44,34 +44,41 @@ tozlow/
 - `/welcome` includes a technology-themed hero image with animated overlays.
 - A subtle grid background is used to reinforce the product's technical identity without adding visual noise.
 
+## Documentation
+
+- [Architecture](ARCHITECTURE.md) - Technical overview of the smart contracts and frontend.
+- [Session Creation Flow](SESSION_CREATION_FLOW.md) - Detailed breakdown of the session lifecycle.
+- [Product Report](TOZLOW_PRODUCT_REPORT.md) - Executive summary and product value proposition.
+- [Deployment Guide](apps/contracts-stylus/README_DEPLOY.md) - Instructions for deploying the Stylus contract.
+
 ## Quick Start
 
 ```bash
-# 1. Instalar dependencias
+# 1. Install dependencies
 pnpm install
 
-# 2. Configurar variables de entorno
+# 2. Configure environment variables
 cp apps/frontend/.env.example apps/frontend/.env.local
 
-# 3. Desplegar contrato en testnet
+# 3. Deploy contract to testnet
 pnpm contract:deploy:testnet
 
-# 4. Inicializar el contrato con la dirección de USDC
-#    (paso obligatorio después de cualquier deploy, o el depósito fallará)
+# 4. Initialize the contract with the USDC address
+#    (mandatory step after any deploy, otherwise deposits will fail)
 export PRIVATE_KEY=0x...
-export ARBITRUM_SEPOLIA_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/TU_KEY
-CONTRACT_ADDRESS=0x<contrato> ./apps/contracts-stylus/initialize.sh
+export ARBITRUM_SEPOLIA_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/YOUR_KEY
+CONTRACT_ADDRESS=0x<contract_address> ./apps/contracts-stylus/initialize.sh
 
-# 5. Actualizar .env.local con la dirección del contrato
+# 5. Update .env.local with the contract address
 # NEXT_PUBLIC_TOZLOW_ADDRESS=0x...
 
-# 6. Arrancar el frontend
+# 6. Start the frontend
 pnpm dev
 ```
 
-> **⚠️ Importante:** El paso 4 (`initialize`) es **obligatorio** tras cada deploy.
-> Sin él, `usdcAddress()` devuelve `0x000...000` y todas las transacciones
-> de depósito fallan con una estimación de gas absurda en MetaMask.
+> **⚠️ Important:** Step 4 (`initialize`) is **mandatory** after every deploy.
+> Without it, `usdcAddress()` returns `0x000...000` and all deposit
+> transactions will fail with an absurd gas estimation in MetaMask.
 
 ## Networks
 
@@ -79,17 +86,17 @@ pnpm dev
 |-----|----------|-----|
 | Arbitrum Sepolia | 421614 | https://sepolia-rollup.arbitrum.io/rpc |
 
-## Gas en Arbitrum
+## Gas on Arbitrum
 
-El frontend obtiene fees frescos del bloque actual antes de enviar **cualquier** transacción (`createSession`, `deposit`, `castVote`, `finalizeSession`). Esto evita el error **"max fee per gas less than block base fee"** que ocurre cuando el base fee del siguiente bloque es mayor al estimado en el momento del click.
+The frontend fetches fresh fees from the current block before sending **any** transaction (`createSession`, `deposit`, `castVote`, `finalizeSession`). This prevents the **"max fee per gas less than block base fee"** error that occurs when the next block's base fee is higher than the one estimated at the time of the click.
 
-El cálculo usa:
+The calculation uses:
 ```
-maxFeePerGas = baseFeePerGas_actual × 1.5
+maxFeePerGas = current_baseFeePerGas × 1.5
 maxPriorityFeePerGas = 0.001 gwei
 ```
 
-En Arbitrum Sepolia el gas base es ~0.02 gwei, por lo que el costo real sigue siendo fracciones de centavo.
+On Arbitrum Sepolia, the base gas is ~0.02 gwei, so the actual cost remains fractions of a cent.
 
 ## Resources
 

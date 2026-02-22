@@ -1,200 +1,200 @@
-# Flujo de Creación de Sesiones en Tozlow 🎉
+# Tozlow Session Creation Flow 🎉
 
-## Resumen Ejecutivo
+## Executive Summary
 
-Tozlow es una dApp que permite crear **sesiones de responsabilidad grupal** donde los participantes depositan USDC como garantía de asistencia a eventos acordados. Si alguien falta, pierde su depósito que se reparte entre los presentes.
+Tozlow is a dApp that allows creating **group accountability sessions** where participants deposit USDC as a guarantee of attendance to agreed-upon events. If someone flakes, they lose their deposit, which is distributed among those who attended.
 
-## Flujo Completo de Creación de Sesión
+## Complete Session Creation Flow
 
-### 1. Conexión de Wallet
-**Paso inicial obligatorio**
+### 1. Wallet Connection
+**Mandatory initial step**
 
-- El usuario debe conectar su wallet usando el botón "Conectar wallet" en el header
-- Aparece un modal con opciones:
-  - **Injected**: Para wallets como MetaMask, OKX, etc.
-  - **WalletConnect**: Para conexión vía QR code
-- Si la wallet no está en **Arbitrum Sepolia**, aparece un mensaje "Cambiar a Arbitrum Sepolia" con botón para cambiar automáticamente
+- The user must connect their wallet using the "Connect wallet" button in the header.
+- A modal appears with options:
+  - **Injected**: For wallets like MetaMask, OKX, etc.
+  - **WalletConnect**: For connection via QR code.
+- If the wallet is not on **Arbitrum Sepolia**, a "Switch to Arbitrum Sepolia" message appears with a button to switch automatically.
 
-**Validaciones:**
-- Wallet debe estar conectada
-- Debe estar en la red correcta (Arbitrum Sepolia)
+**Validations:**
+- Wallet must be connected.
+- Must be on the correct network (Arbitrum Sepolia).
 
-### 2. Acceso al Modal de Creación
-**Ubicación:** Botón "Nueva sesión" en la página principal
+### 2. Accessing the Creation Modal
+**Location:** "New session" button on the main page.
 
-- Se encuentra en la sección principal de la app
-- Solo visible cuando la wallet está conectada y en la red correcta
+- Located in the main section of the app.
+- Only visible when the wallet is connected and on the correct network.
 
-### 3. Configuración de la Sesión
+### 3. Session Configuration
 
-#### 3.1 Monto por Participante
-**Campo obligatorio**
-- **Tipo:** Número decimal (USDC tiene 6 decimales)
-- **Valor mínimo:** 0.01 USDC
-- **Valor por defecto:** 1.00 USDC
-- **Formato:** Input numérico con step 0.01
+#### 3.1 Amount per Participant
+**Mandatory field**
+- **Type:** Decimal number (USDC has 6 decimals).
+- **Minimum value:** 0.01 USDC.
+- **Default value:** 1.00 USDC.
+- **Format:** Numeric input with 0.01 step.
 
-**Consideraciones:**
-- Este monto será depositado por cada participante
-- Si alguien falta, pierde este monto
-- El monto se reparte entre los asistentes
+**Considerations:**
+- This amount will be deposited by each participant.
+- If someone flakes, they lose this amount.
+- The amount is distributed among the attendees.
 
-#### 3.2 Fecha y Hora Límite
-**Campo obligatorio**
-- **Fecha:** Input de tipo `date` (YYYY-MM-DD)
-- **Hora:** Input de tipo `time` (HH:MM)
-- **Formato interno:** Timestamp Unix (segundos)
+#### 3.2 Deadline Date and Time
+**Mandatory field**
+- **Date:** `date` type input (YYYY-MM-DD).
+- **Time:** `time` type input (HH:MM).
+- **Internal format:** Unix Timestamp (seconds).
 
-**Validaciones:**
-- La fecha/hora debe ser en el futuro
-- No se permiten fechas pasadas
+**Validations:**
+- The date/time must be in the future.
+- Past dates are not allowed.
 
-#### 3.3 Participantes
-**Campo obligatorio**
-- **Mínimo:** 3 participantes totales (host + 2 amigos)
-- **Máximo:** 5 participantes totales (host + 4 amigos)
-- **Formato:** Direcciones Ethereum (`0x...`)
+#### 3.3 Participants
+**Mandatory field**
+- **Minimum:** 3 total participants (host + 2 friends).
+- **Maximum:** 5 total participants (host + 4 friends).
+- **Format:** Ethereum addresses (`0x...`).
 
-**Estructura:**
-- El **host** (creador) se agrega automáticamente
-- Campos para agregar wallets de amigos (2-4 campos)
-- Cada participante debe tener una dirección válida
+**Structure:**
+- The **host** (creator) is added automatically.
+- Fields to add friends' wallets (2-4 fields).
+- Each participant must have a valid address.
 
-**Interfaz:**
-- Campo de texto para cada participante
-- Botón "+" para agregar participante
-- Botón "🗑️" para remover participante
-- Indicador visual del host
+**Interface:**
+- Text field for each participant.
+- "+" button to add a participant.
+- "🗑️" button to remove a participant.
+- Visual indicator for the host.
 
-### 4. Envío de la Transacción
-**Acción:** Botón "Crear sesión"
+### 4. Transaction Submission
+**Action:** "Create session" button.
 
-**Parámetros enviados al contrato:**
+**Parameters sent to the contract:**
 ```solidity
 createSession(
-    uint256 amountPerPerson,    // Monto en USDC (6 decimales)
-    uint256 deadline,           // Timestamp Unix
-    uint256 votingPeriod,       // Segundos de ventana de votación
-    address[] participants      // Array de direcciones
+    uint256 amountPerPerson,    // Amount in USDC (6 decimals)
+    uint256 deadline,           // Unix Timestamp
+    uint256 votingPeriod,       // Voting window in seconds
+    address[] participants      // Array of addresses
 )
 ```
 
-**Gas dinámico:**
-Antes de enviar la transacción, el frontend consulta el bloque más reciente para calcular `maxFeePerGas = baseFee × 1.5`. Esto evita el error *"max fee per gas less than block base fee"* que ocurre en Arbitrum cuando el base fee sube entre la estimación y la inclusión del bloque.
+**Dynamic Gas:**
+Before sending the transaction, the frontend queries the latest block to calculate `maxFeePerGas = baseFee × 1.5`. This prevents the *"max fee per gas less than block base fee"* error that occurs on Arbitrum when the base fee rises between the estimation and block inclusion.
 
-**Estados durante el envío:**
-1. **Pendiente:** `isPending = true` → Muestra spinner + "Confirming in wallet…"
-2. **Confirmando:** `isConfirming = true` → Espera confirmación en blockchain + "On chain Request…"
-3. **Éxito:** `isSuccess = true` → Modal se cierra automáticamente, callback `onSuccess`
-4. **Error:** `writeError` del hook → Mensaje de error mostrado en el formulario, estado reseteado
+**States during submission:**
+1. **Pending:** `isPending = true` → Shows spinner + "Confirming in wallet…"
+2. **Confirming:** `isConfirming = true` → Waits for blockchain confirmation + "On chain Request…"
+3. **Success:** `isSuccess = true` → Modal closes automatically, `onSuccess` callback.
+4. **Error:** `writeError` from the hook → Error message shown in the form, state reset.
 
-### 5. Post-Creación
+### 5. Post-Creation
 
-#### 5.1 Actualización de la UI
-- El modal se cierra automáticamente
-- Se actualiza la lista de sesiones en la página principal
-- La nueva sesión aparece con ID único
+#### 5.1 UI Update
+- The modal closes automatically.
+- The session list on the main page is updated.
+- The new session appears with a unique ID.
 
-#### 5.2 Estado de la Sesión
-**Información almacenada:**
-- **ID de sesión:** `uint256` (autoincremental)
-- **Host:** Dirección del creador
-- **Monto por persona:** En wei de USDC
-- **Deadline:** Timestamp Unix
-- **Participantes:** Array de direcciones
-- **Estado:** `active = true`, `finalized = false`
+#### 5.2 Session State
+**Stored information:**
+- **Session ID:** `uint256` (auto-incremental).
+- **Host:** Creator's address.
+- **Amount per person:** In USDC wei.
+- **Deadline:** Unix Timestamp.
+- **Participants:** Array of addresses.
+- **State:** `active = true`, `finalized = false`.
 
-#### 5.3 Próximos Pasos para Participantes
-Una vez creada la sesión, los participantes pueden:
+#### 5.3 Next Steps for Participants
+Once the session is created, participants can:
 
-1. **Depositar USDC** → Llamar `deposit(sessionId)`
-2. **Ver estado** → Consultar `getSession(sessionId)`
-3. **Votar ausencias** → Después del deadline, llamar `castVote(sessionId, absent)`
-4. **Finalizar** → El host puede llamar `finalizeSession(sessionId)`
+1. **Deposit USDC** → Call `deposit(sessionId)`.
+2. **View state** → Query `getSession(sessionId)`.
+3. **Vote absences** → After the deadline, call `castVote(sessionId, absent)`.
+4. **Finalize** → The host can call `finalizeSession(sessionId)`.
 
-## Estados de Error
+## Error States
 
-### Errores de Validación (frontend)
-- **"Conecta tu wallet primero"**: Wallet no conectada
-- **"Necesitas al menos 2 amigos más (3 total)"**: Menos de 3 participantes
-- **"La fecha tiene que ser en el futuro"**: Fecha/hora inválida o pasada
+### Validation Errors (frontend)
+- **"Connect your wallet first"**: Wallet not connected.
+- **"You need at least 2 more friends (3 total)"**: Less than 3 participants.
+- **"The date must be in the future"**: Invalid or past date/time.
 
-### Errores de Wagmi/Red
-- Los errores de `writeContract` (rechazo del usuario, fallo de estimación de gas) se capturan vía la propiedad `error` del hook `useWriteContract` en un `useEffect`, no con `try/catch` síncronos.
-- El estado del modal se resetea con `resetWrite()` al volver a abrirlo para evitar que estados sucios de una TX anterior bloqueen el formulario.
+### Wagmi/Network Errors
+- `writeContract` errors (user rejection, gas estimation failure) are caught via the `error` property of the `useWriteContract` hook in a `useEffect`, not with synchronous `try/catch`.
+- The modal state is reset with `resetWrite()` when reopened to prevent dirty states from a previous TX from blocking the form.
 
-### Errores de Contrato
-- **Reversiones del contrato**: Se parsean con `parseContractError` y muestran mensajes legibles.
-- **`AlreadyInitialized`**: El contrato ya fue inicializado, no se puede volver a llamar `initialize`.
-- **`NotParticipant`**: La wallet no está en la lista de participantes de esa sesión.
-- **`DeadlineReached`**: El timestamp de la sesión ya expiró, no se puede depositar.
+### Contract Errors
+- **Contract Reverts**: Parsed with `parseContractError` and show readable messages.
+- **`AlreadyInitialized`**: The contract was already initialized, cannot call `initialize` again.
+- **`NotParticipant`**: The wallet is not in the participant list for that session.
+- **`DeadlineReached`**: The session timestamp has already expired, cannot deposit.
 
-## Interfaz de Usuario
+## User Interface
 
-### Diseño del Modal
-- **Estilo:** Glass morphism con backdrop blur
-- **Animaciones:** `animate-slide-up` al abrir
-- **Responsive:** `max-w-lg` centrado
-- **Tema:** Colores CSS variables personalizadas
+### Modal Design
+- **Style:** Glass morphism with backdrop blur.
+- **Animations:** `animate-slide-up` on open.
+- **Responsive:** `max-w-lg` centered.
+- **Theme:** Custom CSS variables colors.
 
-### Campos del Formulario
-- **Labels con iconos:** Coins, Calendar, Users
-- **Estados de foco:** Bordes coloreados por campo
-- **Validación visual:** Mensajes de error en rojo
-- **Estados de carga:** Spinners durante transacciones
+### Form Fields
+- **Labels with icons:** Coins, Calendar, Users.
+- **Focus states:** Colored borders per field.
+- **Visual validation:** Red error messages.
+- **Loading states:** Spinners during transactions.
 
-### Feedback Visual
-- **Éxito:** Modal se cierra automáticamente
-- **Error:** Mensaje rojo debajo del formulario
-- **Carga:** Botón deshabilitado con spinner
+### Visual Feedback
+- **Success:** Modal closes automatically.
+- **Error:** Red message below the form.
+- **Loading:** Disabled button with spinner.
 
-## Consideraciones Técnicas
+## Technical Considerations
 
 ### Smart Contract Integration
-- **ABI:** `tozlowAbi` importado desde `@/abi/TozlowSession`
-- **Address:** `TOZLOW_ADDRESS` desde variable de entorno `NEXT_PUBLIC_TOZLOW_ADDRESS`
-- **Hooks:** `useWriteContract` + `useWaitForTransactionReceipt`
-- **Inicialización:** El contrato requiere llamar `initialize(usdcAddress)` una vez tras el deploy (ver `initialize.sh`). Sin esto, todos los depósitos fallan.
+- **ABI:** `tozlowAbi` imported from `@/abi/TozlowSession`.
+- **Address:** `TOZLOW_ADDRESS` from environment variable `NEXT_PUBLIC_TOZLOW_ADDRESS`.
+- **Hooks:** `useWriteContract` + `useWaitForTransactionReceipt`.
+- **Initialization:** The contract requires calling `initialize(usdcAddress)` once after deploy (see `initialize.sh`). Without this, all deposits fail.
 
-### Gas Dinámico
-- Hook `useFreshGasParams` en `src/hooks/useFreshGasParams.ts`
-- Consulta `eth_getBlockByNumber("latest")` justo antes de cada `writeContract`
-- Calcula `maxFeePerGas = baseFee × 1.5` y `maxPriorityFeePerGas = 0.001 gwei`
-- Aplicado en: `createSession`, `approve`, `deposit`, `castVote`, `finalizeSession`
+### Dynamic Gas
+- `useFreshGasParams` hook in `src/hooks/useFreshGasParams.ts`.
+- Queries `eth_getBlockByNumber("latest")` right before each `writeContract`.
+- Calculates `maxFeePerGas = baseFee × 1.5` and `maxPriorityFeePerGas = 0.001 gwei`.
+- Applied in: `createSession`, `approve`, `deposit`, `castVote`, `finalizeSession`.
 
-### Gestión de Estado
-- **Local state:** `useState` para campos del formulario
-- **Error handling:** Propiedad `error` del hook + `useEffect` (no `try/catch` síncronos)
-- **Reset:** `resetWrite()` al reabrir el modal y antes de cada submit para limpiar estados sucios
-- **Success callback:** Actualiza lista de sesiones padre
+### State Management
+- **Local state:** `useState` for form fields.
+- **Error handling:** Hook `error` property + `useEffect` (no synchronous `try/catch`).
+- **Reset:** `resetWrite()` when reopening the modal and before each submit to clear dirty states.
+- **Success callback:** Updates parent session list.
 
-### Flujo Deposit (2 transacciones)
-1. **Approve:** `USDC.approve(TOZLOW_ADDRESS, amount)` con gas fresco
-2. Espera confirmación on-chain via `useWaitForTransactionReceipt`
-3. **Deposit:** re-fetcha `allowance` + obtiene gas fresco nuevo → `deposit(sessionId)`
-4. El paso 3 ocurre en un `useEffect([isApproveSuccess])` con un `ref` guard para evitar dobles llamadas
+### Deposit Flow (2 transactions)
+1. **Approve:** `USDC.approve(TOZLOW_ADDRESS, amount)` with fresh gas.
+2. Waits for on-chain confirmation via `useWaitForTransactionReceipt`.
+3. **Deposit:** re-fetches `allowance` + gets new fresh gas → `deposit(sessionId)`.
+4. Step 3 occurs in a `useEffect([isApproveSuccess])` with a `ref` guard to prevent double calls.
 
-### Validaciones Frontend
-- **Tipo checking:** TypeScript para direcciones `0x${string}[]`
-- **Formato numérico:** `parseUnits(amount, 6)` para USDC
-- **Timestamp:** Conversión de fecha/hora local a Unix timestamp
+### Frontend Validations
+- **Type checking:** TypeScript for addresses `0x${string}[]`.
+- **Numeric format:** `parseUnits(amount, 6)` for USDC.
+- **Timestamp:** Conversion from local date/time to Unix timestamp.
 
-## Flujo de Participantes
+## Participant Flow
 
-### Para unirse a una sesión existente:
-1. Ver sesiones activas en la página principal
-2. Hacer clic en una sesión
-3. Ver detalles y participantes
-4. Depositar USDC si es participante
-5. Esperar al deadline
-6. Votar por ausencias
-7. Reclamar recompensas si corresponde
+### To join an existing session:
+1. View active sessions on the main page.
+2. Click on a session.
+3. View details and participants.
+4. Deposit USDC if a participant.
+5. Wait for the deadline.
+6. Vote for absences.
+7. Claim rewards if applicable.
 
-### Estados posibles de una sesión:
-- **Activa:** Recolectando depósitos
-- **Finalizada:** Votación completada, fondos distribuidos
-- **Expirada:** Deadline pasado, esperando finalización
+### Possible session states:
+- **Active:** Collecting deposits.
+- **Finalized:** Voting completed, funds distributed.
+- **Expired:** Deadline passed, waiting for finalization.
 
-## Conclusión
+## Conclusion
 
-El flujo de creación de sesiones en Tozlow está diseñado para ser **intuitivo y seguro**, con múltiples validaciones tanto en frontend como en smart contract. La interfaz guía al usuario paso a paso, asegurando que todas las condiciones necesarias se cumplan antes de crear una sesión vinculante en blockchain.
+The session creation flow in Tozlow is designed to be **intuitive and secure**, with multiple validations on both the frontend and smart contract. The interface guides the user step by step, ensuring all necessary conditions are met before creating a binding session on the blockchain.
